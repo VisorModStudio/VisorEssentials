@@ -4,20 +4,19 @@ import org.vmstudio.essentials.core.client.gui.ContainerSlot;
 import org.vmstudio.essentials.core.client.extensions.AbstractContainerScreenExtension;
 import org.vmstudio.essentials.core.common.VisorEssentials;
 import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.BeaconScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.SimpleContainer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.*;
 import org.jetbrains.annotations.NotNull;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.List;
@@ -28,7 +27,7 @@ public abstract class BeaconScreenMixin
         implements AbstractContainerScreenExtension {
 
     @Unique
-    private ResourceLocation visorEssentials$VrTexture = McVersionUtils.newResourceLoc(
+    private Identifier visorEssentials$VrTexture = McVersionUtils.newResourceLoc(
             VisorEssentials.MOD_ID,
             "textures/gui/container/beacon.png"
     );
@@ -52,13 +51,9 @@ public abstract class BeaconScreenMixin
         visorEssentials$setEdgeHeight(imageHeight);
     }
 
-    @Redirect(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIIII)V"))
-    private void visorEssentials$background(GuiGraphics instance, ResourceLocation atlasLocation, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight){
-        if(visorEssentials$isVRContainer()){
-            instance.blit(visorEssentials$VrTexture, x, y, uOffset, vOffset, uWidth, vHeight);
-            return;
-        }
-        instance.blit(atlasLocation, x, y, uOffset, vOffset, uWidth, vHeight);
+    @ModifyExpressionValue(method = "renderBg", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/BeaconScreen;BEACON_LOCATION:Lnet/minecraft/resources/Identifier;"))
+    private Identifier visorEssentials$background(Identifier original){
+        return visorEssentials$isVRContainer() ? visorEssentials$VrTexture : original;
     }
 
 

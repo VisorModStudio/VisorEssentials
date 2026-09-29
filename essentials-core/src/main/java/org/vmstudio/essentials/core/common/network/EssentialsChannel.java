@@ -1,7 +1,7 @@
 package org.vmstudio.essentials.core.common.network;
 
 import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.BowItem;
 import org.jetbrains.annotations.NotNull;
 import org.vmstudio.essentials.core.common.VisorEssentials;
@@ -18,7 +18,7 @@ import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 
 public final class EssentialsChannel {
 
-    public static final ResourceLocation ID =
+    public static final Identifier ID =
             McVersionUtils.newResourceLoc(VisorEssentials.MOD_ID, "channel");
     public static final int NETWORK_VERSION = 2; // 2: bow draw cancel payload
 

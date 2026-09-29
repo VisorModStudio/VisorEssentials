@@ -1,19 +1,19 @@
 package org.vmstudio.essentials.core.client.render;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import net.minecraft.core.BlockPos;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
+import org.vmstudio.visor.api.compatibility.mcversion.render.McGlState;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
+import org.vmstudio.visor.api.compatibility.mcversion.render.McShaders;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.level.lighting.LightEngine;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.HitResult;
@@ -37,7 +37,7 @@ import static org.vmstudio.essentials.core.client.AddonEntryClient.MC;
 
 public class BowAimCrosshairRenderer implements VREventListener {
 
-    private static final ResourceLocation ICONS_LOC = McRenderUtils.crosshairTexture();
+    private static final Identifier ICONS_LOC = McRenderUtils.crosshairTexture();
     private static final float UV_SIZE = McRenderUtils.crosshairUvSize();
 
     private static final double MAX_AIM_DISTANCE = 64.0;
@@ -122,7 +122,7 @@ public class BowAimCrosshairRenderer implements VREventListener {
                                 boolean hitSomething) {
         float light = MC.level.getMaxLocalRawBrightness(
                 BlockPos.containing(renderPos)
-        ) / (float) MC.level.getMaxLightLevel();
+        ) / (float) LightEngine.MAX_LEVEL;
         float brightness = Math.max(light, MIN_LIGHT);
         if (!hitSomething) {
             brightness *= MISS_BRIGHTNESS;
@@ -149,23 +149,23 @@ public class BowAimCrosshairRenderer implements VREventListener {
         float pitch = (float) Math.toDegrees(Mth.atan2(-aimDir.y, horizontalLength));
 
         // --- Setup ---
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
+        McGlState.setShaderColor(1f, 1f, 1f, 1f);
 
-        RenderSystem.enableDepthTest();
-        RenderSystem.depthMask(false);
-        RenderSystem.depthFunc(GL11C.GL_ALWAYS);
+        McGlState.enableDepthTest();
+        McGlState.depthMask(false);
+        McGlState.depthFunc(GL11C.GL_ALWAYS);
 
-        RenderSystem.enableBlend();
-        RenderSystem.blendFuncSeparate(
-                GlStateManager.SourceFactor.ONE_MINUS_DST_COLOR,
-                GlStateManager.DestFactor.ONE_MINUS_SRC_COLOR,
-                GlStateManager.SourceFactor.ONE,
-                GlStateManager.DestFactor.ZERO
+        McGlState.enableBlend();
+        McGlState.blendFuncSeparate(
+                McGlState.Blend.ONE_MINUS_DST_COLOR,
+                McGlState.Blend.ONE_MINUS_SRC_COLOR,
+                McGlState.Blend.ONE,
+                McGlState.Blend.ZERO
         );
-        RenderSystem.disableCull();
+        McGlState.disableCull();
 
-        RenderSystem.setShaderTexture(0, ICONS_LOC);
-        RenderSystem.setShader(GameRenderer::getPositionTexColorShader);
+        McGlState.setShaderTexture(0, ICONS_LOC);
+        McShaders.use(McShaders.Core.POSITION_TEX_COLOR);
 
         poseStack.pushPose();
 
@@ -208,11 +208,11 @@ public class BowAimCrosshairRenderer implements VREventListener {
 
         // --- Restore ---
         poseStack.popPose();
-        RenderSystem.setShaderColor(1f, 1f, 1f, 1f);
-        RenderSystem.enableCull();
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableBlend();
-        RenderSystem.depthMask(true);
-        RenderSystem.depthFunc(GL11C.GL_LEQUAL);
+        McGlState.setShaderColor(1f, 1f, 1f, 1f);
+        McGlState.enableCull();
+        McGlState.defaultBlendFunc();
+        McGlState.disableBlend();
+        McGlState.depthMask(true);
+        McGlState.depthFunc(GL11C.GL_LEQUAL);
     }
 }

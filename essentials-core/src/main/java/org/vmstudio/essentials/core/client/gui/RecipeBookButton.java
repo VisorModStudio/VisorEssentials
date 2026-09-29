@@ -3,7 +3,7 @@ package org.vmstudio.essentials.core.client.gui;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.ImageButton;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 
 
@@ -13,7 +13,7 @@ public final class RecipeBookButton {
     public static final int HEIGHT = 18;
 
     //? if <1.20.2 {
-    /*private static final ResourceLocation TEXTURE =
+    /*private static final Identifier TEXTURE =
             McVersionUtils.newResourceLoc("textures/gui/recipe_button.png");
     *///?}
 

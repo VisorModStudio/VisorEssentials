@@ -1,37 +1,45 @@
+// #!MC-VERSION:: 1.21.11+
 package org.vmstudio.essentials.core.mixin.client.gui.containers;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import org.vmstudio.essentials.core.client.extensions.AbstractContainerScreenExtension;
 import org.vmstudio.essentials.core.common.VisorEssentials;
 import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.AbstractMountInventoryScreen;
 import net.minecraft.client.gui.screens.inventory.HorseInventoryScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.world.inventory.HorseInventoryMenu;
+import net.minecraft.world.inventory.AbstractMountInventoryMenu;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-@Mixin(HorseInventoryScreen.class)
-public abstract class HorseInventoryScreenMixin
-        extends AbstractContainerScreen<HorseInventoryMenu>
+// 1.21.11 moved the horse screen into a base class shared with the nautilus, which stays vanilla
+@Mixin(AbstractMountInventoryScreen.class)
+public abstract class HorseInventoryScreenMixin<T extends AbstractMountInventoryMenu>
+        extends AbstractContainerScreen<T>
         implements AbstractContainerScreenExtension {
 
     @Unique
-    private ResourceLocation visorEssentials$VrTexture = McVersionUtils.newResourceLoc(
-            VisorEssentials.MOD_ID,
-            "textures/gui/container/horse.png"
-    );
+    private Identifier visorEssentials$VrTexture;
 
-    public HorseInventoryScreenMixin(HorseInventoryMenu menu, Inventory playerInventory, Component title) {
+    public HorseInventoryScreenMixin(T menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
     }
 
+    @Inject(method = "<init>", at = @At("TAIL"))
+    private void visorEssentials$onInit(CallbackInfo ci) {
+        if (((Object) this) instanceof HorseInventoryScreen) {
+            visorEssentials$VrTexture = McVersionUtils.newResourceLoc(
+                    VisorEssentials.MOD_ID,
+                    "textures/gui/container/horse.png"
+            );
+        }
+    }
 
     @Override
     public void visorEssentials$preInit() {
@@ -47,26 +55,14 @@ public abstract class HorseInventoryScreenMixin
         visorEssentials$setEdgeHeight(imageHeight);
     }
 
-    @Redirect(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIIII)V", ordinal = 0))
-    private void visorEssentials$background(GuiGraphics instance, ResourceLocation atlasLocation, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight){
-        if(visorEssentials$isVRContainer()){
-            instance.blit(visorEssentials$VrTexture, x, y, uOffset, vOffset, uWidth, vHeight);
-            imageHeight = 166;
-            return;
-        }
-        instance.blit(atlasLocation, x, y, uOffset, vOffset, uWidth, vHeight);
-    }
-    @Inject(method = "renderBg", at = @At("TAIL"))
-    private void visorEssentials$background2(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY, CallbackInfo ci){
-        if(visorEssentials$isVRContainer()){
-            imageHeight = 88;
-            return;
-        }
+    @ModifyExpressionValue(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractMountInventoryScreen;getBackgroundTextureLocation()Lnet/minecraft/resources/Identifier;"))
+    private Identifier visorEssentials$background(Identifier original){
+        return visorEssentials$isVRContainer() ? visorEssentials$VrTexture : original;
     }
 
 
     @Override
     public boolean visorEssentials$supportsVRContainer() {
-        return true;
+        return visorEssentials$VrTexture != null;
     }
 }

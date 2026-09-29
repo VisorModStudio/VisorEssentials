@@ -81,6 +81,7 @@ public class EssentialsSettingsScreen extends Screen {
         renderBackground(graphics);
         *///?}
         super.render(graphics, mouseX, mouseY, partialTick);
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, 12, 0xFFFFFF);
+        // 1.21.6+ skips text without an alpha byte
+        graphics.drawCenteredString(this.font, this.title, this.width / 2, 12, 0xFFFFFFFF);
     }
 }

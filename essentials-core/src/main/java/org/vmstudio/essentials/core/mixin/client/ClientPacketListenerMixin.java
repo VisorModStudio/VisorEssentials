@@ -1,19 +1,15 @@
+// #!MC-VERSION:: 1.21.3+
 package org.vmstudio.essentials.core.mixin.client;
 
+import net.minecraft.client.ClientRecipeBook;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
 import net.minecraft.client.gui.screens.recipebook.RecipeUpdateListener;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.protocol.game.ClientboundLoginPacket;
 import net.minecraft.network.protocol.game.ClientboundPlaceGhostRecipePacket;
-import net.minecraft.network.protocol.game.ClientboundRecipePacket;
-import net.minecraft.network.protocol.game.ClientboundUpdateRecipesPacket;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-//? if <1.20.2 {
-/*import net.minecraft.world.item.crafting.Recipe;
-*///?} else {
-import net.minecraft.world.item.crafting.RecipeHolder;
-//?}
+import net.minecraft.world.item.crafting.display.RecipeDisplay;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
@@ -43,18 +39,9 @@ public class ClientPacketListenerMixin {
     }
 
 
-    @Inject(method = "handleAddOrRemoveRecipes", at = @At("TAIL"))
-    private void visorEssentials$forwardRecipesUpdated(ClientboundRecipePacket packet, CallbackInfo ci) {
-        visorEssentials$notifyOverlayScreens();
-    }
-
-    @Inject(method = "handleUpdateRecipes", at = @At("TAIL"))
-    private void visorEssentials$forwardRecipesReplaced(ClientboundUpdateRecipesPacket packet, CallbackInfo ci) {
-        visorEssentials$notifyOverlayScreens();
-    }
-
-    @Unique
-    private static void visorEssentials$notifyOverlayScreens() {
+    // every recipe book packet (add, remove, settings) ends here since 1.21.2
+    @Inject(method = "refreshRecipeBook", at = @At("TAIL"))
+    private void visorEssentials$forwardRecipesUpdated(ClientRecipeBook recipeBook, CallbackInfo ci) {
         if (!EssentialsClientSettings.getBetterInventory().isEnabled()) {
             return;
         }
@@ -100,35 +87,24 @@ public class ClientPacketListenerMixin {
             return;
         }
         AbstractContainerMenu containerMenu = minecraft.player.containerMenu;
-        if (containerMenu.containerId != packet.getContainerId()) {
+        if (containerMenu.containerId != packet.containerId()) {
             return;
         }
-        ((ClientPacketListener) (Object) this).getRecipeManager()
-                .byKey(packet.getRecipe())
-                .ifPresent(recipe -> {
-                    var overlayManager = VisorAPI.client().getGuiManager().getOverlayManager();
-                    visorEssentials$setupGhostRecipe(
-                            overlayManager.getOverlay(VROverlayInventory.ID, VROverlayInventory.class),
-                            containerMenu, recipe
-                    );
-                    visorEssentials$setupGhostRecipe(
-                            overlayManager.getOverlay(VROverlayContainer.ID, VROverlayContainer.class),
-                            containerMenu, recipe
-                    );
-                });
+        var overlayManager = VisorAPI.client().getGuiManager().getOverlayManager();
+        visorEssentials$fillGhostRecipe(
+                overlayManager.getOverlay(VROverlayInventory.ID, VROverlayInventory.class),
+                containerMenu, packet.recipeDisplay()
+        );
+        visorEssentials$fillGhostRecipe(
+                overlayManager.getOverlay(VROverlayContainer.ID, VROverlayContainer.class),
+                containerMenu, packet.recipeDisplay()
+        );
     }
 
-    //? if <1.20.2 {
-    /*@Unique
-    private static void visorEssentials$setupGhostRecipe(VROverlayScreenInScreen<?> overlay,
-                                                         AbstractContainerMenu menu,
-                                                         Recipe<?> recipe) {
-    *///?} else {
     @Unique
-    private static void visorEssentials$setupGhostRecipe(VROverlayScreenInScreen<?> overlay,
-                                                         AbstractContainerMenu menu,
-                                                         RecipeHolder<?> recipe) {
-    //?}
+    private static void visorEssentials$fillGhostRecipe(VROverlayScreenInScreen<?> overlay,
+                                                        AbstractContainerMenu menu,
+                                                        RecipeDisplay recipeDisplay) {
         if (overlay == null) {
             return;
         }
@@ -141,6 +117,6 @@ public class ClientPacketListenerMixin {
                 || menuAccess.getMenu() != menu) {
             return;
         }
-        listener.getRecipeBookComponent().setupGhostRecipe(recipe, menu.slots);
+        listener.fillGhostRecipe(recipeDisplay);
     }
 }

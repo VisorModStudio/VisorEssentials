@@ -1,24 +1,23 @@
+// #!MC-VERSION:: 1.21.8+
 package org.vmstudio.essentials.core.mixin.client.gui.containers;
 
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import org.vmstudio.essentials.core.client.EssentialsClientSettings;
-import org.vmstudio.essentials.core.common.VisorEssentials;
+import org.vmstudio.essentials.core.client.gui.VRSlotRenderContext;
 import org.vmstudio.visor.api.VisorAPI;
 import org.vmstudio.visor.api.client.gui.overlays.framework.screen.VROverlayScreenInScreen;
 import org.vmstudio.visor.api.client.gui.overlays.framework.template.VROverlayTemplateScreenInScreen;
 import org.vmstudio.essentials.core.client.gui.ContainerSlot;
 import org.vmstudio.essentials.core.client.extensions.AbstractContainerScreenExtension;
-import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.Font;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.MenuAccess;
-import net.minecraft.core.NonNullList;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.Slot;
-import net.minecraft.world.item.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.spongepowered.asm.mixin.Final;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,7 +25,6 @@ import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.*;
@@ -60,40 +58,45 @@ public abstract class AbstractContainerScreenMixin <T extends AbstractContainerM
         super(title);
     }
 
-    @Redirect(
-            method = "render",
+    @ModifyExpressionValue(
+            method = "renderCarriedItem",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z", ordinal = 1)
     )
-    private boolean visorEssentials$noDraggingItem(ItemStack instance) {
+    private boolean visorEssentials$noDraggingItem(boolean isEmpty) {
+        return isEmpty || visorEssentials$isCarriedByOverlay();
+    }
+
+    @Unique
+    private boolean visorEssentials$isCarriedByOverlay() {
         if(!EssentialsClientSettings.getBetterInventory().isEnabled()){
-            return instance.isEmpty();
+            return false;
         }
         if(VisorAPI.clientState().stateMode().isNotActive()){
-            return instance.isEmpty();
+            return false;
         }
         var focused = VisorAPI.client().getGuiManager().getCursorHandler()
                 .getFocusedOverlay();
         if(focused != null
                 && focused.getId().equals("game_screen")){
             if(MC.screen == this){
-                return instance.isEmpty();
+                return false;
             }
         }
         if(focused instanceof VROverlayScreenInScreen<?> screenInScreen){
             if(screenInScreen.getScreen() == this){
-                return instance.isEmpty();
+                return false;
             }
         }
         if(focused instanceof VROverlayTemplateScreenInScreen<?> screenInScreen){
             if(screenInScreen.getScreen() == this){
-                return instance.isEmpty();
+                return false;
             }
         }
         return true;
     }
 
     @Inject(method = "<init>", at  = @At("TAIL"))
-    public void visorEssentials$onInit(AbstractContainerMenu menu, Inventory playerInventory, Component title, CallbackInfo ci){
+    public void visorEssentials$onInit(CallbackInfo ci){
         visorEssentials$vrSlots = new ArrayList<>();
         visorEssentials$vrSlotsMap = new LinkedHashMap<>();
 
@@ -127,105 +130,53 @@ public abstract class AbstractContainerScreenMixin <T extends AbstractContainerM
         }
     }
 
-    @Redirect(method = "renderLabels", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;drawString(Lnet/minecraft/client/gui/Font;Lnet/minecraft/network/chat/Component;IIIZ)I",ordinal = 1))
-    private int visorEssentials$noInventoryTitle(GuiGraphics instance, Font font, Component text, int x, int y, int color, boolean dropShadow){
-        if(visorEssentials$isVrContainer){
-            return 0;
-        }
-        return instance.drawString(this.font, text, x, y, color, dropShadow);
+    // on both paths: render() and AbstractRecipeBookScreen's own render(), which skips it
+    @Inject(method = "renderContents", at = @At("HEAD"))
+    private void visorEssentials$beginSlotRender(CallbackInfo ci){
+        VRSlotRenderContext.begin(this);
     }
-    @Redirect(
-            method = "render",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/core/NonNullList;size()I")
+
+    @Inject(method = "renderContents", at = @At("RETURN"))
+    private void visorEssentials$endSlotRender(CallbackInfo ci){
+        VRSlotRenderContext.end();
+    }
+
+    @ModifyExpressionValue(
+            method = "renderLabels",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractContainerScreen;playerInventoryTitle:Lnet/minecraft/network/chat/Component;")
     )
-    private int visorEssentials$redirectSlots1(NonNullList<?> instance) {
-        if(visorEssentials$hasVRSlots()){
-            return visorEssentials$vrSlots.size();
-        }
-        return instance.size();
-    }
-    @Redirect(
-            method = "render",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/core/NonNullList;get(I)Ljava/lang/Object;")
-    )
-    private Object visorEssentials$redirectSlots2(NonNullList<?> instance, int i) {
-        if(visorEssentials$hasVRSlots()){
-            return visorEssentials$vrSlots.get(i).parent();
-        }
-        return instance.get(i);
+    private Component visorEssentials$noInventoryTitle(Component title){
+        return visorEssentials$isVrContainer ? Component.empty() : title;
     }
 
-
-
-    @Redirect(
-            method = "findSlot",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/core/NonNullList;size()I")
-    )
-    private int visorEssentials$redirectSlots3(NonNullList<Slot> instance) {
-        if(visorEssentials$hasVRSlots()){
-            return visorEssentials$vrSlots.size();
-        }
-        return instance.size();
-    }
-    @Redirect(
-            method = "findSlot",
-            at = @At(value = "INVOKE", target = "Lnet/minecraft/core/NonNullList;get(I)Ljava/lang/Object;")
-    )
-    private Object visorEssentials$redirectSlots4(NonNullList<Slot> instance, int i) {
-        if(visorEssentials$hasVRSlots()){
-            return visorEssentials$vrSlots.get(i).parent();
-        }
-        return instance.get(i);
-    }
-
-
-    @Redirect(
-            method = "mouseReleased", // or the method where the for-each is
+    @ModifyExpressionValue(
+            method = {"renderSlots", "getHoveredSlot(DD)Lnet/minecraft/world/inventory/Slot;", "mouseReleased"},
             at = @At(value = "INVOKE", target = "Lnet/minecraft/core/NonNullList;iterator()Ljava/util/Iterator;")
     )
-    private Iterator<Slot> visorEssentials$redirectSlots5(NonNullList<Slot> instance) {
+    private Iterator<Slot> visorEssentials$vrSlotsOnly(Iterator<Slot> slots) {
         if(visorEssentials$hasVRSlots()){
             return visorEssentials$vrSlotsMap.keySet().iterator();
         }
-        return instance.iterator();
+        return slots;
     }
 
-
-
-
-    @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;x:I"))
-    private int visorEssentials$redirectSlotPos1(Slot instance){
-        var vrSlot = visorEssentials$vrSlot(instance);
-        return vrSlot != null ? vrSlot.vrPosX() : instance.x;
-    }
-    @Redirect(method = "render", at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;y:I"))
-    private int visorEssentials$redirectSlotPos2(Slot instance){
-        var vrSlot = visorEssentials$vrSlot(instance);
-        return vrSlot != null ? vrSlot.vrPosY() : instance.y;
+    // mouseReleased: where a snapped-back item flies to
+    @WrapOperation(
+            method = {"renderSlot", "isHovering(Lnet/minecraft/world/inventory/Slot;DD)Z", "renderSlotHighlightBack", "renderSlotHighlightFront", "mouseReleased"},
+            at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;x:I")
+    )
+    private int visorEssentials$vrSlotX(Slot slot, Operation<Integer> original){
+        var vrSlot = visorEssentials$vrSlot(slot);
+        return vrSlot != null ? vrSlot.vrPosX() : original.call(slot);
     }
 
-
-    @Redirect(method = "renderSlot", at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;x:I"))
-    private int visorEssentials$redirectSlotPos3(Slot instance){
-        var vrSlot = visorEssentials$vrSlot(instance);
-        return vrSlot != null ? vrSlot.vrPosX() : instance.x;
-    }
-    @Redirect(method = "renderSlot", at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;y:I"))
-    private int visorEssentials$redirectSlotPos4(Slot instance){
-        var vrSlot = visorEssentials$vrSlot(instance);
-        return vrSlot != null ? vrSlot.vrPosY() : instance.y;
-    }
-
-
-    @Redirect(method = "isHovering(Lnet/minecraft/world/inventory/Slot;DD)Z", at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;x:I"))
-    private int visorEssentials$redirectSlotPos5(Slot instance){
-        var vrSlot = visorEssentials$vrSlot(instance);
-        return vrSlot != null ? vrSlot.vrPosX() : instance.x;
-    }
-    @Redirect(method = "isHovering(Lnet/minecraft/world/inventory/Slot;DD)Z", at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;y:I"))
-    private int visorEssentials$redirectSlotPos6(Slot instance){
-        var vrSlot = visorEssentials$vrSlot(instance);
-        return vrSlot != null ? vrSlot.vrPosY() : instance.y;
+    @WrapOperation(
+            method = {"renderSlot", "isHovering(Lnet/minecraft/world/inventory/Slot;DD)Z", "renderSlotHighlightBack", "renderSlotHighlightFront", "mouseReleased"},
+            at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;y:I")
+    )
+    private int visorEssentials$vrSlotY(Slot slot, Operation<Integer> original){
+        var vrSlot = visorEssentials$vrSlot(slot);
+        return vrSlot != null ? vrSlot.vrPosY() : original.call(slot);
     }
 
 

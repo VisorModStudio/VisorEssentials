@@ -27,6 +27,7 @@ import org.vmstudio.visor.api.common.addon.VisorAddon;
 import org.vmstudio.visor.api.common.addon.component.ComponentPriority;
 import org.vmstudio.visor.api.common.eventbus.listener.VREventHandler;
 import org.vmstudio.visor.api.common.eventbus.listener.VREventListener;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 
 
 public class VROverlayDraggedItem extends VROverlayScreen
@@ -125,7 +126,7 @@ public class VROverlayDraggedItem extends VROverlayScreen
 
 
     @Override
-    public boolean mouseClicked(double d, double e, int i) {
+    protected boolean onMouseClicked(double d, double e, int i) {
         if(minecraft.player.containerMenu instanceof CreativeModeInventoryScreen.ItemPickerMenu itemPickerMenu){
             if (i == 0) {
                 this.minecraft.player.drop(itemPickerMenu.getCarried(), true);
@@ -152,14 +153,14 @@ public class VROverlayDraggedItem extends VROverlayScreen
                                     ItemStack itemStack,
                                     int posX, int posY,
                                     String string) {
-        guiGraphics.pose().pushPose();
+        McGuiUtils.pushPose(guiGraphics);
         guiGraphics.renderItem(itemStack, posX, posY);
         guiGraphics.renderItemDecorations(
                 this.font,
                 itemStack,
                 posX, posY, string
         );
-        guiGraphics.pose().popPose();
+        McGuiUtils.popPose(guiGraphics);
     }
 
     private boolean supportsDragging(VROverlay overlay){

@@ -8,6 +8,9 @@ dependencies {
 
     // @Environment annotation of the shared sources, NeoForge ignores it
     compileOnly("net.fabricmc:fabric-loader:${fabric_loader_version}") { transitive = false }
+
+    // MixinExtras annotations of the shared sources; Visor ships the runtime
+    compileOnly(annotationProcessor("io.github.llamalad7:mixinextras-common:${mixin_extras_version}"))
 }
 
 loom {

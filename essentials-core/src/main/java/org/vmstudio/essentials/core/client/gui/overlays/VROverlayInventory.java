@@ -17,8 +17,9 @@ import org.vmstudio.visor.api.common.addon.VisorAddon;
 import org.vmstudio.visor.api.common.eventbus.listener.VREventHandler;
 import org.vmstudio.visor.api.common.eventbus.listener.VREventListener;
 import org.vmstudio.visor.api.common.player.VRPose;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
+import org.vmstudio.essentials.core.client.gui.VRDoubleClick;
 import org.vmstudio.essentials.core.client.gui.screens.VRInvScreen;
-import net.minecraft.client.Minecraft;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
@@ -29,6 +30,8 @@ public class VROverlayInventory extends VROverlayScreenInScreen<VRInvScreen> imp
     public static final String ID = "inventory";
 
     protected final OverlayOptionsPose optionsPose;
+
+    private final VRDoubleClick clicks = new VRDoubleClick();
 
     public VROverlayInventory(@NotNull VisorAddon owner,
                               @NotNull String id) {
@@ -47,8 +50,8 @@ public class VROverlayInventory extends VROverlayScreenInScreen<VRInvScreen> imp
                 VisorAPI.client().getGuiManager().getGuiWidth(),
                 VisorAPI.client().getGuiManager().getGuiHeight()
         );
-        init(
-                Minecraft.getInstance(),
+        McGuiUtils.initScreen(
+                this,
                 getRequestedWidthScaled(),
                 getRequestedHeightScaled()
         );
@@ -111,13 +114,13 @@ public class VROverlayInventory extends VROverlayScreenInScreen<VRInvScreen> imp
 
         if (screen == null) {
             screen = new VRInvScreen(menu, minecraft.player.getInventory());
-            screen.init(minecraft, width, height);
+            McGuiUtils.initScreen(screen, width, height);
         }else{
             boolean craftingAllowed = !overlayContainer.isEnabled();
             if (craftingAllowed != screen.isFullInventory()
                     || menu != screen.getMenu()) {
                 screen = new VRInvScreen(menu, minecraft.player.getInventory());
-                screen.init(minecraft, width, height);
+                McGuiUtils.initScreen(screen, width, height);
             }
         }
 
@@ -266,6 +269,16 @@ public class VROverlayInventory extends VROverlayScreenInScreen<VRInvScreen> imp
                 newCursor.x,
                 newCursor.y
         );
+    }
+
+    @Override
+    protected boolean onMouseClicked(double mouseX, double mouseY, int buttonType) {
+        if (screen == null
+                || buttonType == 0 && (isCursorOnResizeHandle(getRawMouseX(), getRawMouseY())
+                || isCursorOnDragHandle(getRawMouseX(), getRawMouseY()))) {
+            return super.onMouseClicked(mouseX, mouseY, buttonType);
+        }
+        return clicks.mouseClicked(screen, mouseX, mouseY, buttonType);
     }
 
     public HandType getUsedHand(){

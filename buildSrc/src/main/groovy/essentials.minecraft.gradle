@@ -108,7 +108,41 @@ dependencies {
     compileOnly "org.jetbrains:annotations:${jetbrains_annotations_version}"
 }
 
+// ---- Version-range sources (essentials-core mixins only) ----------------------------------
+project.ext.mcversionCoreLayout = {
+    def core = rootProject.project(":essentials-core")
+    new org.vmstudio.build.McVersionLayout(core.projectDir, core.subprojects*.name.findAll { it ==~ /\d+(\.\d+)+/ })
+}
+if (project.parent.name == "essentials-core") {
+    def mcversion = mcversionCoreLayout()
+    afterEvaluate {
+        // after Stonecutter registered its own source directories
+        sourceSets.main.java.exclude(mcversion.excludeSpec(minecraftVersion))
+        def parked = mcversion.parkedSources(project, minecraftVersion)
+        tasks.named("compileJava") { source(parked) }
+    }
+    tasks.register("checkMcversionLayout") {
+        description = "Verifies the range headers, the parked copies and the absence of Stonecutter markers in range files"
+        def active = org.vmstudio.build.McVersionLayout.activeVersion(rootProject.projectDir)
+        doLast {
+            def problems = mcversion.check(active)
+            if (problems) {
+                throw new GradleException("mcversion layout of essentials-core:\n  " + problems.join("\n  "))
+            }
+        }
+    }
+    tasks.named("check") { dependsOn "checkMcversionLayout" }
+}
+
 // ---- Resources --------------------------------------------------------------
+// 1.21.9 pack.mcmeta, one file for the resource side (format 69+) and the data side (88+): with min_format at or
+// below the last pre-minor format of both (64 resources, 81 data) each side accepts, and then requires,
+// pack_format + supported_formats + min_format/max_format, the range covering its own current format.
+def packFormatFields = stonecutter.eval(minecraftVersion, ">=1.21.9")
+        ? "\"pack_format\": ${pack_format},\n    \"supported_formats\": [64, ${data_pack_format}],\n" +
+          "    \"min_format\": 64,\n    \"max_format\": ${data_pack_format}"
+        : "\"pack_format\": ${pack_format}"
+
 project.ext.resourcePlaceholders = [
         mod_id                           : mod_id,
         mod_name                         : mod_name,
@@ -120,6 +154,7 @@ project.ext.resourcePlaceholders = [
         java_version                     : java_version,
         mixin_compat_level               : mixin_compat_level,
         pack_format                      : pack_format,
+        pack_format_fields               : packFormatFields,
         fabric_loader_version            : fabric_loader_version,
         fabric_loader_version_range      : fabric_loader_version_range,
         minecraft_version_range_fabric   : minecraft_version_range_fabric,

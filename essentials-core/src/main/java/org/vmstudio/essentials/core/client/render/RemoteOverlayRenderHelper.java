@@ -1,13 +1,10 @@
 package org.vmstudio.essentials.core.client.render;
 
-import com.mojang.blaze3d.platform.GlStateManager;
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import me.phoenixra.atumvr.api.misc.color.AtumColorImmutable;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.GameRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
@@ -28,6 +25,9 @@ import org.vmstudio.visor.api.common.addon.VisorAddon;
 import org.vmstudio.visor.api.common.eventbus.listener.VREventHandler;
 import org.vmstudio.visor.api.common.eventbus.listener.VREventListener;
 import org.vmstudio.visor.api.common.player.VRPose;
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
+import org.vmstudio.visor.api.compatibility.mcversion.render.McGlState;
+import org.vmstudio.visor.api.compatibility.mcversion.render.McShaders;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
 
 import java.util.ArrayList;
@@ -122,28 +122,28 @@ public class RemoteOverlayRenderHelper implements VREventListener {
             poseStack.popPose();
         }
 
-        RenderSystem.depthFunc(GL30.GL_LEQUAL);
-        RenderSystem.depthMask(true);
-        RenderSystem.enableDepthTest();
-        RenderSystem.colorMask(true, true, true, true);
-        RenderSystem.defaultBlendFunc();
-        RenderSystem.disableBlend();
-        RenderSystem.enableCull();
+        McGlState.depthFunc(GL30.GL_LEQUAL);
+        McGlState.depthMask(true);
+        McGlState.enableDepthTest();
+        McGlState.colorMask(true, true, true, true);
+        McGlState.defaultBlendFunc();
+        McGlState.disableBlend();
+        McGlState.enableCull();
     }
 
     private static void setupOverlayRenderState() {
-        RenderSystem.enableBlend();
-        RenderSystem.blendFuncSeparate(
-                GlStateManager.SourceFactor.SRC_ALPHA,
-                GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
-                GlStateManager.SourceFactor.ONE_MINUS_DST_ALPHA,
-                GlStateManager.DestFactor.ONE
+        McGlState.enableBlend();
+        McGlState.blendFuncSeparate(
+                McGlState.Blend.SRC_ALPHA,
+                McGlState.Blend.ONE_MINUS_SRC_ALPHA,
+                McGlState.Blend.ONE_MINUS_DST_ALPHA,
+                McGlState.Blend.ONE
         );
-        RenderSystem.disableCull();
-        RenderSystem.colorMask(true, true, true, false);
-        RenderSystem.depthFunc(GL30.GL_LEQUAL);
-        RenderSystem.depthMask(false);
-        RenderSystem.enableDepthTest();
+        McGlState.disableCull();
+        McGlState.colorMask(true, true, true, false);
+        McGlState.depthFunc(GL30.GL_LEQUAL);
+        McGlState.depthMask(false);
+        McGlState.enableDepthTest();
     }
 
     private static @NotNull Vector3f getIndicatorPosition(@NotNull VRPose hmdPose,
@@ -251,7 +251,7 @@ public class RemoteOverlayRenderHelper implements VREventListener {
         float b = color.getBlue();
         float a = color.getAlpha();
 
-        RenderSystem.setShader(GameRenderer::getPositionColorShader);
+        McShaders.use(McShaders.Core.POSITION_COLOR);
 
         McVertexBuilder bufferBuilder = McVertexBuilder.get();
         bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
@@ -272,7 +272,7 @@ public class RemoteOverlayRenderHelper implements VREventListener {
             return;
         }
 
-        render(poseStack, minecraft.gameRenderer.getMainCamera().getPosition(), partialTicks);
+        render(poseStack, McVersionClientUtils.cameraPosition(minecraft.gameRenderer.getMainCamera()), partialTicks);
     }
 
     private record RotationAngles(float yaw, float pitch) {}

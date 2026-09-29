@@ -9,7 +9,7 @@ mod_license = "LGPL-3.0-only"
 # ---- Visor ------------------------------------------------------------------------------------
 # (AtumVR and AtumConfiguration included).
 # "local" = <root>/libs, "maven" = Modrinth Maven (maven.modrinth:visor:<visor_version>+mc<mc>-<loader>:api)
-visor_source  = "maven"
+visor_source  = "local"
 visor_version = "0.6.0-alpha.1"
 visor_version_range_fabric    = ">=0.6.0-alpha.1"
 visor_version_range_forgelike = "[0.6.0-alpha.1,)"
@@ -30,6 +30,12 @@ jetbrains_annotations_version = "26.1.0"
 "1.20.4" = ["fabric", "forge", "neoforge"]
 "1.20.6" = ["fabric", "forge", "neoforge"]
 "1.21.1" = ["fabric", "forge", "neoforge"]
+"1.21.3" = ["fabric", "forge", "neoforge"]
+"1.21.4" = ["fabric", "forge", "neoforge"]
+"1.21.5" = ["fabric", "forge", "neoforge"]
+"1.21.8" = ["fabric", "forge", "neoforge"]
+"1.21.10" = ["fabric", "forge", "neoforge"]
+"1.21.11" = ["fabric", "forge", "neoforge"]
 
 # ---- Version dependencies ---------------------------------------------------------------------
 ["1.20.1"]
@@ -94,3 +100,88 @@ forge_version = "52.1.16"
 forge_version_range = "[52,)"
 neoforge_version = "21.1.250"
 neoforge_version_range = "[21.1,)"
+
+["1.21.3"]
+# 1.21.2 - 1.21.3
+java_version = 21
+pack_format = 42
+minecraft_version_range_fabric = ">=1.21.2 <1.21.4"
+minecraft_version_range_forgelike = "[1.21.3]"
+parchment_version = "2024.12.07"
+fabric_api_version = "0.114.1"
+forge_version = "53.1.12"
+forge_version_range = "[53,)"
+neoforge_version = "21.3.97"
+neoforge_version_range = "[21.3,)"
+
+["1.21.4"]
+# 1.21.4
+java_version = 21
+pack_format = 46
+minecraft_version_range_fabric = ">=1.21.4 <1.21.5"
+minecraft_version_range_forgelike = "[1.21.4]"
+parchment_version = "2025.03.23"
+fabric_api_version = "0.119.4"
+forge_version = "54.1.18"
+forge_version_range = "[54,)"
+neoforge_version = "21.4.157"
+neoforge_version_range = "[21.4,)"
+
+["1.21.5"]
+# 1.21.5
+java_version = 21
+pack_format = 55
+minecraft_version_range_fabric = ">=1.21.5 <1.21.6"
+minecraft_version_range_forgelike = "[1.21.5]"
+parchment_version = "2025.06.15"
+fabric_api_version = "0.128.2"
+forge_version = "55.1.13"
+forge_version_range = "[55,)"
+neoforge_version = "21.5.98"
+neoforge_version_range = "[21.5,)"
+
+["1.21.8"]
+# 1.21.6 - 1.21.8
+java_version = 21
+pack_format = 64
+minecraft_version_range_fabric = ">=1.21.6 <1.21.9"
+minecraft_version_range_forgelike = "[1.21.6,1.21.8]"
+parchment_version = "2025.09.14"
+fabric_api_version = "0.136.1"
+forge_version = "58.1.22"
+forge_version_range = "[56,)"
+neoforge_version = "21.8.54"
+neoforge_version_range = "[21.7.0-beta,)"
+
+["1.21.10"]
+# 1.21.9 - 1.21.10
+java_version = 21
+# fabric-api 0.138.4 requires Fabric Loader 0.17+
+fabric_loader_version = "0.17.3"
+fabric_loader_version_range = ">=0.17.0"
+pack_format = 69
+data_pack_format = 88
+minecraft_version_range_fabric = ">=1.21.9 <1.21.11"
+minecraft_version_range_forgelike = "[1.21.9,1.21.10]"
+parchment_version = "2025.10.12"
+fabric_api_version = "0.138.4"
+forge_version = "60.1.15"
+forge_version_range = "[59,)"
+neoforge_version = "21.10.64"
+neoforge_version_range = "[21.9.0-beta,)"
+
+["1.21.11"]
+# 1.21.11
+java_version = 21
+fabric_loader_version = "0.17.3"
+fabric_loader_version_range = ">=0.17.3"
+pack_format = 75
+data_pack_format = 94
+minecraft_version_range_fabric = ">=1.21.11 <1.21.12"
+minecraft_version_range_forgelike = "[1.21.11]"
+parchment_version = "2025.12.20"
+fabric_api_version = "0.141.6"
+forge_version = "61.2.1"
+forge_version_range = "[61,)"
+neoforge_version = "21.11.45"
+neoforge_version_range = "[21.11,)"

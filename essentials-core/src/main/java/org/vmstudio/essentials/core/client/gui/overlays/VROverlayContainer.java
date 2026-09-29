@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.vmstudio.essentials.core.client.EssentialsClientSettings;
 import org.vmstudio.essentials.core.client.extensions.AbstractContainerScreenExtension;
+import org.vmstudio.essentials.core.client.gui.VRDoubleClick;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
@@ -23,10 +24,13 @@ import org.vmstudio.visor.api.client.gui.overlays.framework.screen.VROverlayScre
 import org.vmstudio.visor.api.client.player.pose.PlayerPoseType;
 import org.vmstudio.visor.api.common.addon.VisorAddon;
 import org.vmstudio.visor.api.common.addon.component.ComponentPriority;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 
 public class VROverlayContainer extends VROverlayScreenInScreen<AbstractContainerScreen<?>> {
 
     public static final String ID = "container";
+
+    private final VRDoubleClick clicks = new VRDoubleClick();
 
 
     @Getter
@@ -275,8 +279,18 @@ public class VROverlayContainer extends VROverlayScreenInScreen<AbstractContaine
         }else {
             setEnabled(true);
         }
-        screen.init(minecraft, width, height);
+        McGuiUtils.initScreen(screen, width, height);
         updatePose(1);
+    }
+
+    @Override
+    protected boolean onMouseClicked(double mouseX, double mouseY, int buttonType) {
+        if (screen == null
+                || buttonType == 0 && (isCursorOnResizeHandle(getRawMouseX(), getRawMouseY())
+                || isCursorOnDragHandle(getRawMouseX(), getRawMouseY()))) {
+            return super.onMouseClicked(mouseX, mouseY, buttonType);
+        }
+        return clicks.mouseClicked(screen, mouseX, mouseY, buttonType);
     }
 
     public boolean isAttachedTo(BlockPos blockPos){

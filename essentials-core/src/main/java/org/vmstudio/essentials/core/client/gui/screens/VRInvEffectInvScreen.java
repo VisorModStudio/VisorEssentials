@@ -5,30 +5,19 @@ import lombok.Getter;
 import lombok.Setter;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.renderer.texture.TextureAtlasSprite;
-import net.minecraft.client.resources.MobEffectTextureManager;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
-import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
+import org.vmstudio.essentials.core.compatibility.mcversion.EssentialsGuiUtils;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Optional;
 
 public abstract class VRInvEffectInvScreen extends AbstractContainerScreen<AbstractContainerMenu> {
-
-    //? if >=1.20.2 {
-    private static final ResourceLocation EFFECT_BACKGROUND_LARGE_SPRITE =
-            McVersionUtils.newResourceLoc("container/inventory/effect_background_large");
-    private static final ResourceLocation EFFECT_BACKGROUND_SMALL_SPRITE =
-            McVersionUtils.newResourceLoc("container/inventory/effect_background_small");
-    //?}
 
     @Setter
     @Getter
@@ -81,7 +70,7 @@ public abstract class VRInvEffectInvScreen extends AbstractContainerScreen<Abstr
 
                 if (mobEffectInstance != null) {
                     List<Component> list = List.of(this.getEffectName(mobEffectInstance), this.getEffectDuration(mobEffectInstance));
-                    guiGraphics.renderTooltip(this.font, list, Optional.empty(), mouseX, mouseY);
+                    EssentialsGuiUtils.setTooltipForNextFrame(guiGraphics, this.font, list, mouseX, mouseY);
                 }
             }
 
@@ -96,19 +85,7 @@ public abstract class VRInvEffectInvScreen extends AbstractContainerScreen<Abstr
         int i = this.topPos;
 
         for(MobEffectInstance mobEffectInstance : effects) {
-            //? if <1.20.2 {
-            /*if (isSmall) {
-                guiGraphics.blit(INVENTORY_LOCATION, renderX, i, 0, 166, 120, 32);
-            } else {
-                guiGraphics.blit(INVENTORY_LOCATION, renderX, i, 0, 198, 32, 32);
-            }
-            *///?} else {
-            if (isSmall) {
-                guiGraphics.blitSprite(EFFECT_BACKGROUND_LARGE_SPRITE, renderX, i, 120, 32);
-            } else {
-                guiGraphics.blitSprite(EFFECT_BACKGROUND_SMALL_SPRITE, renderX, i, 32, 32);
-            }
-            //?}
+            EssentialsGuiUtils.blitEffectBackground(guiGraphics, renderX, i, isSmall);
 
             i += yOffset;
         }
@@ -116,12 +93,10 @@ public abstract class VRInvEffectInvScreen extends AbstractContainerScreen<Abstr
     }
 
     private void renderIcons(GuiGraphics guiGraphics, int renderX, int yOffset, Iterable<MobEffectInstance> effects, boolean isSmall) {
-        MobEffectTextureManager mobEffectTextureManager = this.minecraft.getMobEffectTextures();
         int i = this.topPos;
 
         for(MobEffectInstance mobEffectInstance : effects) {
-            TextureAtlasSprite textureAtlasSprite = mobEffectTextureManager.get(mobEffectInstance.getEffect());
-            guiGraphics.blit(renderX + (isSmall ? 6 : 7), i + 7, 0, 18, 18, textureAtlasSprite);
+            EssentialsGuiUtils.blitEffectIcon(guiGraphics, mobEffectInstance, renderX + (isSmall ? 6 : 7), i + 7, 18);
             i += yOffset;
         }
 
@@ -132,9 +107,9 @@ public abstract class VRInvEffectInvScreen extends AbstractContainerScreen<Abstr
 
         for(MobEffectInstance mobEffectInstance : effects) {
             Component component = this.getEffectName(mobEffectInstance);
-            guiGraphics.drawString(this.font, component, renderX + 10 + 18, i + 6, 16777215);
+            guiGraphics.drawString(this.font, component, renderX + 10 + 18, i + 6, 0xFFFFFFFF);
             Component component2 = this.getEffectDuration(mobEffectInstance);
-            guiGraphics.drawString(this.font, component2, renderX + 10 + 18, i + 6 + 10, 8355711);
+            guiGraphics.drawString(this.font, component2, renderX + 10 + 18, i + 6 + 10, 0xFF7F7F7F);
             i += yOffset;
         }
 

@@ -3,18 +3,17 @@ package org.vmstudio.essentials.core.mixin.client.gui.containers;
 import org.vmstudio.essentials.core.client.extensions.AbstractContainerScreenExtension;
 import org.vmstudio.essentials.core.common.VisorEssentials;
 import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
-import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.MerchantScreen;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.MerchantMenu;
+import com.llamalad7.mixinextras.injector.ModifyExpressionValue;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Unique;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(MerchantScreen.class)
@@ -22,7 +21,7 @@ public abstract class MerchantScreenMixin
         extends AbstractContainerScreen<MerchantMenu>
         implements AbstractContainerScreenExtension {
     @Unique
-    private ResourceLocation visorEssentials$VrTexture = McVersionUtils.newResourceLoc(
+    private Identifier visorEssentials$VrTexture = McVersionUtils.newResourceLoc(
             VisorEssentials.MOD_ID,
             "textures/gui/container/villager.png"
     );
@@ -45,13 +44,9 @@ public abstract class MerchantScreenMixin
         visorEssentials$setEdgeHeight(imageHeight);
     }
 
-    @Redirect(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIFFIIII)V", ordinal = 0))
-    private void visorEssentials$background(GuiGraphics instance, ResourceLocation atlasLocation, int x, int y, int blitOffset, float uOffset, float vOffset, int uWidth, int vHeight, int textureWidth, int textureHeight){
-        if(visorEssentials$isVRContainer()){
-            instance.blit(visorEssentials$VrTexture, x, y, blitOffset, uOffset, vOffset, uWidth, vHeight, textureWidth, textureHeight);
-            return;
-        }
-        instance.blit(atlasLocation, x, y, blitOffset, uOffset, vOffset, uWidth, vHeight, textureWidth, textureHeight);
+    @ModifyExpressionValue(method = "renderBg", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/MerchantScreen;VILLAGER_LOCATION:Lnet/minecraft/resources/Identifier;", ordinal = 0))
+    private Identifier visorEssentials$background(Identifier original){
+        return visorEssentials$isVRContainer() ? visorEssentials$VrTexture : original;
     }
 
 
