@@ -1,11 +1,12 @@
 package org.vmstudio.essentials.core.client.render;
 
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import me.phoenixra.atumvr.api.misc.color.AtumColorImmutable;
+import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.Vec3;
@@ -27,8 +28,16 @@ import org.vmstudio.visor.api.common.eventbus.listener.VREventListener;
 import org.vmstudio.visor.api.common.player.VRPose;
 import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McGlState;
+import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McShaders;
 import org.vmstudio.visor.api.compatibility.mcversion.render.McVertexBuilder;
+
+//? if >=26.2 {
+import net.minecraft.network.chat.Component;
+import org.vmstudio.visor.api.compatibility.mcversion.render.McFeatureRenderer;
+//?} else {
+/*import net.minecraft.client.renderer.MultiBufferSource;
+*///?}
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -109,8 +118,8 @@ public class RemoteOverlayRenderHelper implements VREventListener {
                     overlay.position().y - cameraPos.y,
                     overlay.position().z - cameraPos.z
             );
-            poseStack.mulPose(Axis.YP.rotationDegrees(-overlay.rotationAngles().yaw()));
-            poseStack.mulPose(Axis.XP.rotationDegrees(overlay.rotationAngles().pitch()));
+            McRenderUtils.rotate(poseStack, Axis.YP.rotationDegrees(-overlay.rotationAngles().yaw()));
+            McRenderUtils.rotate(poseStack, Axis.XP.rotationDegrees(overlay.rotationAngles().pitch()));
             renderPlaceholderQuad(
                     poseStack.last().pose(),
                     DISPLAY_COLOR,
@@ -161,9 +170,9 @@ public class RemoteOverlayRenderHelper implements VREventListener {
                                               boolean backSide) {
         //? if <1.21 {
         /*MultiBufferSource.BufferSource bufferSource = MultiBufferSource.immediate(new BufferBuilder(256));
-        *///?} else {
-        MultiBufferSource.BufferSource bufferSource = MultiBufferSource.immediate(new ByteBufferBuilder(256));
-        //?}
+        *///?} elif <26.2 {
+        /*MultiBufferSource.BufferSource bufferSource = MultiBufferSource.immediate(new ByteBufferBuilder(256));
+        *///?}
         float textWidth = font.width(DISPLAY_TEXT);
         float textX = -textWidth / 2.0F;
         float textY = -font.lineHeight / 2.0F;
@@ -171,10 +180,25 @@ public class RemoteOverlayRenderHelper implements VREventListener {
         poseStack.pushPose();
         poseStack.translate(0.0F, 0.0F, backSide ? -DISPLAY_TEXT_Z_OFFSET : DISPLAY_TEXT_Z_OFFSET);
         if (backSide) {
-            poseStack.mulPose(Axis.YP.rotationDegrees(180.0F));
+            McRenderUtils.rotate(poseStack, Axis.YP.rotationDegrees(180.0F));
         }
         poseStack.scale(DISPLAY_TEXT_SCALE, -DISPLAY_TEXT_SCALE, DISPLAY_TEXT_SCALE);
-        font.drawInBatch(
+        //? if >=26.2 {
+        McFeatureRenderer.collector().submitText(
+                poseStack,
+                textX,
+                textY,
+                Component.literal(DISPLAY_TEXT).getVisualOrderText(),
+                false,
+                Font.DisplayMode.NORMAL,
+                15728880,
+                DISPLAY_TEXT_COLOR.asInt(),
+                0,
+                0
+        );
+        McFeatureRenderer.render();
+        //?} else {
+        /*font.drawInBatch(
                 DISPLAY_TEXT,
                 textX,
                 textY,
@@ -187,6 +211,7 @@ public class RemoteOverlayRenderHelper implements VREventListener {
                 15728880
         );
         bufferSource.endBatch();
+        *///?}
         poseStack.popPose();
     }
 
@@ -254,7 +279,7 @@ public class RemoteOverlayRenderHelper implements VREventListener {
         McShaders.use(McShaders.Core.POSITION_COLOR);
 
         McVertexBuilder bufferBuilder = McVertexBuilder.get();
-        bufferBuilder.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_COLOR);
+        bufferBuilder.begin(PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_COLOR);
         bufferBuilder.vertex(poseMatrix, -halfSize, -halfHeight, 0f).color(r, g, b, a).endVertex();
         bufferBuilder.vertex(poseMatrix, halfSize, -halfHeight, 0f).color(r, g, b, a).endVertex();
         bufferBuilder.vertex(poseMatrix, halfSize, halfHeight, 0f).color(r, g, b, a).endVertex();
@@ -268,11 +293,16 @@ public class RemoteOverlayRenderHelper implements VREventListener {
         }
 
         Minecraft minecraft = Minecraft.getInstance();
-        if (minecraft.gameRenderer.getMainCamera() == null) {
+        //? if >=26.2 {
+        Camera camera = minecraft.gameRenderer.mainCamera();
+        //?} else {
+        /*Camera camera = minecraft.gameRenderer.getMainCamera();
+        *///?}
+        if (camera == null) {
             return;
         }
 
-        render(poseStack, McVersionClientUtils.cameraPosition(minecraft.gameRenderer.getMainCamera()), partialTicks);
+        render(poseStack, McVersionClientUtils.cameraPosition(camera), partialTicks);
     }
 
     private record RotationAngles(float yaw, float pitch) {}

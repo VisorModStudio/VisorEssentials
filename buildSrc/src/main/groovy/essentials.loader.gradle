@@ -37,6 +37,9 @@ sourcesJar {
     exclude { element -> mcversionSpec.isSatisfiedBy(element) }
 }
 
+// ---- Mod jar --------------------------------------------------------------------------------
+project.ext.modJar = tasks.named(unobfuscated ? "jar" : "remapJar")
+
 // ---- Running --------------------------------------------------------------------------------
 loom {
     mods {
@@ -97,6 +100,6 @@ tasks.register("buildAndCollect", Copy) {
             }
         }
     }
-    from(remapJar.archiveFile)
+    from(modJar.flatMap { it.archiveFile })
     into(rootProject.layout.buildDirectory.dir("libs"))
 }

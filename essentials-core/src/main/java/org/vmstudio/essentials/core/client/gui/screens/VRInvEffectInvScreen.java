@@ -3,7 +3,7 @@ package org.vmstudio.essentials.core.client.gui.screens;
 import com.google.common.collect.Ordering;
 import lombok.Getter;
 import lombok.Setter;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -13,6 +13,7 @@ import net.minecraft.world.effect.MobEffectUtil;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.vmstudio.essentials.core.compatibility.mcversion.EssentialsGuiUtils;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 
 import java.util.Collection;
 import java.util.List;
@@ -29,12 +30,17 @@ public abstract class VRInvEffectInvScreen extends AbstractContainerScreen<Abstr
         super(menu, inventory, component);
     }
 
-    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+    //? if >=26.1 {
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+    //?} else {
+    /*public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
+    *///?}
         this.renderEffects(guiGraphics, mouseX, mouseY);
     }
 
-    private void renderEffects(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+    private void renderEffects(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
         int startPos = this.leftPos + this.imageWidth + 2;
         // [-- Modified
         startPos -= - (fullInventory ? 0 : 36);
@@ -81,7 +87,7 @@ public abstract class VRInvEffectInvScreen extends AbstractContainerScreen<Abstr
 
 
     //---Nothing modified below
-    private void renderBackgrounds(GuiGraphics guiGraphics, int renderX, int yOffset, Iterable<MobEffectInstance> effects, boolean isSmall) {
+    private void renderBackgrounds(GuiGraphicsExtractor guiGraphics, int renderX, int yOffset, Iterable<MobEffectInstance> effects, boolean isSmall) {
         int i = this.topPos;
 
         for(MobEffectInstance mobEffectInstance : effects) {
@@ -92,7 +98,7 @@ public abstract class VRInvEffectInvScreen extends AbstractContainerScreen<Abstr
 
     }
 
-    private void renderIcons(GuiGraphics guiGraphics, int renderX, int yOffset, Iterable<MobEffectInstance> effects, boolean isSmall) {
+    private void renderIcons(GuiGraphicsExtractor guiGraphics, int renderX, int yOffset, Iterable<MobEffectInstance> effects, boolean isSmall) {
         int i = this.topPos;
 
         for(MobEffectInstance mobEffectInstance : effects) {
@@ -102,14 +108,14 @@ public abstract class VRInvEffectInvScreen extends AbstractContainerScreen<Abstr
 
     }
 
-    private void renderLabels(GuiGraphics guiGraphics, int renderX, int yOffset, Iterable<MobEffectInstance> effects) {
+    private void renderLabels(GuiGraphicsExtractor guiGraphics, int renderX, int yOffset, Iterable<MobEffectInstance> effects) {
         int i = this.topPos;
 
         for(MobEffectInstance mobEffectInstance : effects) {
             Component component = this.getEffectName(mobEffectInstance);
-            guiGraphics.drawString(this.font, component, renderX + 10 + 18, i + 6, 0xFFFFFFFF);
+            McGuiUtils.drawString(guiGraphics, this.font, component, renderX + 10 + 18, i + 6, 0xFFFFFFFF);
             Component component2 = this.getEffectDuration(mobEffectInstance);
-            guiGraphics.drawString(this.font, component2, renderX + 10 + 18, i + 6 + 10, 0xFF7F7F7F);
+            McGuiUtils.drawString(guiGraphics, this.font, component2, renderX + 10 + 18, i + 6 + 10, 0xFF7F7F7F);
             i += yOffset;
         }
 

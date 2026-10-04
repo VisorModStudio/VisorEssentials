@@ -16,10 +16,17 @@ import java.util.function.BiConsumer;
 @Mixin(GhostSlots.class)
 public abstract class GhostSlotsMixin {
 
+    //? if >=26.1 {
     @WrapOperation(
+            method = "extractRenderState",
+            at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/objects/Reference2ObjectMap;forEach(Ljava/util/function/BiConsumer;)V", remap = false)
+    )
+    //?} else {
+    /*@WrapOperation(
             method = "render",
             at = @At(value = "INVOKE", target = "Lit/unimi/dsi/fastutil/objects/Reference2ObjectMap;forEach(Ljava/util/function/BiConsumer;)V", remap = false)
     )
+    *///?}
     private void visorEssentials$ghostOnVRSlots(Reference2ObjectMap<Slot, Object> ingredients,
                                                 BiConsumer<Slot, Object> action,
                                                 Operation<Void> original) {

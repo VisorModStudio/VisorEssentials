@@ -44,6 +44,6 @@ stonecutter {
         branch("essentials-neoforge") { versions(versionsFor("neoforge")) }
 
         // Main version, should be used for git commits
-        vcsVersion = "1.21.11"
+        vcsVersion = "26.3"
     }
 }

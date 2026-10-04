@@ -12,5 +12,5 @@ repositories {
 }
 
 dependencies {
-    implementation "dev.architectury.loom:dev.architectury.loom.gradle.plugin:1.17.491"
+    implementation "dev.architectury.loom:dev.architectury.loom.gradle.plugin:1.17.493"
 }

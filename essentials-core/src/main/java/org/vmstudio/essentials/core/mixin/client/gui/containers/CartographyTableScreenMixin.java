@@ -37,7 +37,11 @@ public abstract class CartographyTableScreenMixin
         imageHeight = 89;
     }
 
-    @Inject(method = "render", at = @At("HEAD"))
+    //? if >=26.1 {
+    @Inject(method = "extractBackground", at = @At("HEAD"))
+    //?} else {
+    /*@Inject(method = "render", at = @At("HEAD"))
+    *///?}
     private void visorEssentials$updateEdges(CallbackInfo ci){
         visorEssentials$setEdgeX(leftPos);
         visorEssentials$setEdgeY(topPos);
@@ -45,7 +49,11 @@ public abstract class CartographyTableScreenMixin
         visorEssentials$setEdgeHeight(imageHeight);
     }
 
-    @ModifyExpressionValue(method = "renderBg", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/CartographyTableScreen;BG_LOCATION:Lnet/minecraft/resources/Identifier;", ordinal = 0))
+    //? if >=26.1 {
+    @ModifyExpressionValue(method = "extractBackground", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/CartographyTableScreen;BG_LOCATION:Lnet/minecraft/resources/Identifier;", ordinal = 0))
+    //?} else {
+    /*@ModifyExpressionValue(method = "renderBg", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/CartographyTableScreen;BG_LOCATION:Lnet/minecraft/resources/Identifier;", ordinal = 0))
+    *///?}
     private Identifier visorEssentials$background(Identifier original){
         return visorEssentials$isVRContainer() ? visorEssentials$VrTexture : original;
     }

@@ -1,11 +1,16 @@
 package org.vmstudio.essentials.core.client.gui.overlays;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import lombok.Getter;
 import lombok.Setter;
 import org.vmstudio.essentials.core.client.EssentialsClientSettings;
 import org.vmstudio.essentials.core.client.extensions.AbstractContainerScreenExtension;
 import org.vmstudio.essentials.core.client.gui.VRDoubleClick;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
+import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.Entity;
@@ -24,6 +29,7 @@ import org.vmstudio.visor.api.client.gui.overlays.framework.screen.VROverlayScre
 import org.vmstudio.visor.api.client.player.pose.PlayerPoseType;
 import org.vmstudio.visor.api.common.addon.VisorAddon;
 import org.vmstudio.visor.api.common.addon.component.ComponentPriority;
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
 import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 
 public class VROverlayContainer extends VROverlayScreenInScreen<AbstractContainerScreen<?>> {
@@ -77,7 +83,7 @@ public class VROverlayContainer extends VROverlayScreenInScreen<AbstractContaine
             setEnabled(false);
             return;
         }
-        if (minecraft.screen != null || minecraft.player == null) {
+        if (McVersionClientUtils.screen() != null || minecraft.player == null) {
             setEnabled(false);
             return;
         }
@@ -264,6 +270,46 @@ public class VROverlayContainer extends VROverlayScreenInScreen<AbstractContaine
     }
 
 
+
+    public static boolean openInstead(Screen screen) {
+        if(!EssentialsClientSettings.getBetterInventory().isEnabled()) return false;
+        if(VisorAPI.clientState().stateMode().isNotActive()) return false;
+
+        HitResult hitResult = Minecraft.getInstance().hitResult;
+        if(hitResult == null
+                || hitResult.getType() == HitResult.Type.MISS){
+            return false;
+        }
+
+
+        if (McVersionClientUtils.screen() != null) {
+            return false;
+        }
+
+        if (!(screen instanceof InventoryScreen)
+                && !(screen instanceof CreativeModeInventoryScreen)
+                && (screen instanceof AbstractContainerScreen<?> containerScreen)) {
+            boolean supportsVR = ((AbstractContainerScreenExtension)containerScreen)
+                    .visorEssentials$supportsVRContainer();
+            if(!supportsVR){
+                return false;
+            }
+
+            var overlayContainer = VisorAPI.client().getGuiManager()
+                    .getOverlayManager()
+                    .getOverlay(
+                            ID,
+                            VROverlayContainer.class
+                    );
+
+            overlayContainer.openMenu(
+                    containerScreen
+            );
+            return true;
+        }
+        return false;
+    }
+
     public void openMenu(AbstractContainerScreen<?> newScreen) {
 
         ((AbstractContainerScreenExtension)newScreen)
@@ -286,7 +332,7 @@ public class VROverlayContainer extends VROverlayScreenInScreen<AbstractContaine
     @Override
     protected boolean onMouseClicked(double mouseX, double mouseY, int buttonType) {
         if (screen == null
-                || buttonType == 0 && (isCursorOnResizeHandle(getRawMouseX(), getRawMouseY())
+                || buttonType == InputConstants.MOUSE_BUTTON_LEFT && (isCursorOnResizeHandle(getRawMouseX(), getRawMouseY())
                 || isCursorOnDragHandle(getRawMouseX(), getRawMouseY()))) {
             return super.onMouseClicked(mouseX, mouseY, buttonType);
         }

@@ -10,8 +10,11 @@ dependencies {
     modCompileOnly visorApi("fabric")
 }
 
-tasks.named("remapJar") { enabled = false }
-tasks.named("remapSourcesJar") { enabled = false }
+// The core sources are compiled into each loader jar, this node only type-checks them.
+if (!unobfuscated) {
+    tasks.named("remapJar") { enabled = false }
+    tasks.named("remapSourcesJar") { enabled = false }
+}
 
 configurations {
     coreJava      { canBeConsumed = true; canBeResolved = false }

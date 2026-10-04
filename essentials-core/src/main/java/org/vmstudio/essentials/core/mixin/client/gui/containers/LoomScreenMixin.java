@@ -46,14 +46,18 @@ public abstract class LoomScreenMixin
         visorEssentials$setEdgeHeight(imageHeight);
     }
 
-    @ModifyExpressionValue(method = "renderBg", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/LoomScreen;BG_LOCATION:Lnet/minecraft/resources/Identifier;", ordinal = 0))
+    //? if >=26.1 {
+    @ModifyExpressionValue(method = "extractBackground", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/LoomScreen;BG_LOCATION:Lnet/minecraft/resources/Identifier;", ordinal = 0))
+    //?} else {
+    /*@ModifyExpressionValue(method = "renderBg", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/LoomScreen;BG_LOCATION:Lnet/minecraft/resources/Identifier;", ordinal = 0))
+    *///?}
     private Identifier visorEssentials$background(Identifier original){
         return visorEssentials$isVRContainer() ? visorEssentials$VrTexture : original;
     }
 
     //? if <1.20.2 {
     /*// the pattern sprites are cut out of the same texture, below the vanilla panel height
-    @Inject(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/Identifier;IIIIII)V", ordinal = 0, shift = At.Shift.AFTER))
+    @Inject(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIIII)V", ordinal = 0, shift = At.Shift.AFTER))
     private void visorEssentials$vanillaImageHeight(CallbackInfo ci){
         if(visorEssentials$isVRContainer()){
             imageHeight = 166;

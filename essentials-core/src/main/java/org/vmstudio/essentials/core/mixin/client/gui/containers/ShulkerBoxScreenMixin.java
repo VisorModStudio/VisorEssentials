@@ -37,7 +37,11 @@ public abstract class ShulkerBoxScreenMixin
         imageHeight = 88;
     }
 
-    @Inject(method = "render", at = @At("TAIL"))
+    //? if >=26.1 {
+    @Inject(method = "extractBackground", at = @At("TAIL"))
+    //?} else {
+    /*@Inject(method = "render", at = @At("TAIL"))
+    *///?}
     private void visorEssentials$updateEdges(CallbackInfo ci){
         visorEssentials$setEdgeX(leftPos);
         visorEssentials$setEdgeY(topPos);
@@ -45,7 +49,11 @@ public abstract class ShulkerBoxScreenMixin
         visorEssentials$setEdgeHeight(imageHeight);
     }
 
-    @ModifyExpressionValue(method = "renderBg", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/ShulkerBoxScreen;CONTAINER_TEXTURE:Lnet/minecraft/resources/Identifier;", ordinal = 0))
+    //? if >=26.1 {
+    @ModifyExpressionValue(method = "extractBackground", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/ShulkerBoxScreen;CONTAINER_TEXTURE:Lnet/minecraft/resources/Identifier;", ordinal = 0))
+    //?} else {
+    /*@ModifyExpressionValue(method = "renderBg", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/ShulkerBoxScreen;CONTAINER_TEXTURE:Lnet/minecraft/resources/Identifier;", ordinal = 0))
+    *///?}
     private Identifier visorEssentials$background(Identifier original){
         return visorEssentials$isVRContainer() ? visorEssentials$VrTexture : original;
     }

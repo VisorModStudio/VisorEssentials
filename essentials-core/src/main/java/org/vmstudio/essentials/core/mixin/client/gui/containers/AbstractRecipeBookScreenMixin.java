@@ -31,7 +31,11 @@ public abstract class AbstractRecipeBookScreenMixin<T extends RecipeBookMenu>
         super(menu, playerInventory, title);
     }
 
-    @Inject(method = "render", at = @At("TAIL"))
+    //? if >=26.1 {
+    @Inject(method = "extractRenderState", at = @At("TAIL"))
+    //?} else {
+    /*@Inject(method = "render", at = @At("TAIL"))
+    *///?}
     private void visorEssentials$updateEdges(CallbackInfo ci){
         if(recipeBookComponent.isVisible() && !this.widthTooNarrow){
             visorEssentials$setEdgeX(-1);

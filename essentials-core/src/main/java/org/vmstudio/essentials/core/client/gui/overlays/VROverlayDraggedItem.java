@@ -1,15 +1,19 @@
 package org.vmstudio.essentials.core.client.gui.overlays;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
-import net.minecraft.world.inventory.ClickType;
 import net.minecraft.world.item.ItemStack;
+//? if >=26.3 {
+import net.minecraft.util.Prediction;
+//?}
 import org.jetbrains.annotations.NotNull;
 import org.joml.Vector3f;
 import org.vmstudio.essentials.core.client.EssentialsClientSettings;
 import org.vmstudio.essentials.core.common.VisorEssentials;
+import org.vmstudio.essentials.core.compatibility.mcversion.EssentialsGuiUtils;
 import org.vmstudio.visor.api.VisorAPI;
 import org.vmstudio.visor.api.client.ClientFeature;
 import org.vmstudio.visor.api.client.events.AllowClientFeatureVREvent;
@@ -27,6 +31,7 @@ import org.vmstudio.visor.api.common.addon.VisorAddon;
 import org.vmstudio.visor.api.common.addon.component.ComponentPriority;
 import org.vmstudio.visor.api.common.eventbus.listener.VREventHandler;
 import org.vmstudio.visor.api.common.eventbus.listener.VREventListener;
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
 import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 
 
@@ -62,7 +67,7 @@ public class VROverlayDraggedItem extends VROverlayScreen
 
 
     @Override
-    protected void onRender(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTicks) {
+    protected void onRender(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTicks) {
         renderFloatingItem(
                 guiGraphics,
                 minecraft.player.containerMenu.getCarried(),
@@ -128,34 +133,41 @@ public class VROverlayDraggedItem extends VROverlayScreen
     @Override
     protected boolean onMouseClicked(double d, double e, int i) {
         if(minecraft.player.containerMenu instanceof CreativeModeInventoryScreen.ItemPickerMenu itemPickerMenu){
-            if (i == 0) {
-                this.minecraft.player.drop(itemPickerMenu.getCarried(), true);
-                this.minecraft.gameMode.handleCreativeModeItemDrop(itemPickerMenu.getCarried());
+            if (i == InputConstants.MOUSE_BUTTON_LEFT) {
+                dropCreative(itemPickerMenu.getCarried());
                 itemPickerMenu.setCarried(ItemStack.EMPTY);
             }
 
-            if (i == 1) {
-                ItemStack itemstack5 = itemPickerMenu.getCarried().split(1);
-                this.minecraft.player.drop(itemstack5, true);
-                this.minecraft.gameMode.handleCreativeModeItemDrop(itemstack5);
+            if (i == InputConstants.MOUSE_BUTTON_RIGHT) {
+                dropCreative(itemPickerMenu.getCarried().split(1));
             }
         }else {
-            this.minecraft.gameMode.handleInventoryMouseClick(
-                    minecraft.player.containerMenu.containerId,
-                    -999, i, ClickType.PICKUP, this.minecraft.player
+            EssentialsGuiUtils.pickupClick(
+                    this.minecraft.gameMode, this.minecraft.player,
+                    minecraft.player.containerMenu.containerId, -999, i
             );
         }
         return true;
     }
 
 
-    private void renderFloatingItem(GuiGraphics guiGraphics,
+    private void dropCreative(ItemStack itemStack) {
+        //? if >=26.3 {
+        this.minecraft.player.drop(itemStack, true, Prediction.PREDICTED);
+        //?} else {
+        /*this.minecraft.player.drop(itemStack, true);
+        *///?}
+        this.minecraft.gameMode.handleCreativeModeItemDrop(itemStack);
+    }
+
+    private void renderFloatingItem(GuiGraphicsExtractor guiGraphics,
                                     ItemStack itemStack,
                                     int posX, int posY,
                                     String string) {
         McGuiUtils.pushPose(guiGraphics);
-        guiGraphics.renderItem(itemStack, posX, posY);
-        guiGraphics.renderItemDecorations(
+        McGuiUtils.renderItem(guiGraphics, itemStack, posX, posY);
+        McGuiUtils.renderItemDecorations(
+                guiGraphics,
                 this.font,
                 itemStack,
                 posX, posY, string
@@ -166,7 +178,7 @@ public class VROverlayDraggedItem extends VROverlayScreen
     private boolean supportsDragging(VROverlay overlay){
         if(overlay != null
                 && overlay.getId().equals("game_screen")){
-            if(minecraft.screen instanceof AbstractContainerScreen<?>){
+            if(McVersionClientUtils.screen() instanceof AbstractContainerScreen<?>){
                 return true;
             }
         }

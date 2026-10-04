@@ -13,7 +13,7 @@ public final class RecipeBookButton {
     public static final int HEIGHT = 18;
 
     //? if <1.20.2 {
-    /*private static final Identifier TEXTURE =
+    /*private static final ResourceLocation TEXTURE =
             McVersionUtils.newResourceLoc("textures/gui/recipe_button.png");
     *///?}
 

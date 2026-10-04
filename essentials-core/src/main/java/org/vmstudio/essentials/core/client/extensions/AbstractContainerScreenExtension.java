@@ -1,5 +1,6 @@
 package org.vmstudio.essentials.core.client.extensions;
 
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.inventory.Slot;
 import org.vmstudio.essentials.core.client.gui.ContainerSlot;
 import org.jetbrains.annotations.NotNull;
@@ -31,6 +32,11 @@ public interface AbstractContainerScreenExtension {
 
     default boolean visorEssentials$isVRContainer(){
         return false;
+    }
+
+    @Nullable
+    default Identifier visorEssentials$getVRBackgroundTexture(){
+        return null;
     }
 
 

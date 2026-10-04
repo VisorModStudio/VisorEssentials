@@ -8,7 +8,7 @@ import org.vmstudio.essentials.core.client.gui.RecipeBookButton;
 import org.vmstudio.essentials.core.client.gui.overlays.VROverlayContainer;
 import org.vmstudio.essentials.core.client.extensions.AbstractContainerScreenExtension;
 import org.vmstudio.essentials.core.common.VisorEssentials;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
 import net.minecraft.client.gui.screens.recipebook.RecipeBookComponent;
@@ -35,6 +35,7 @@ import net.minecraft.client.input.MouseButtonEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.vmstudio.visor.api.client.gui.GuiTexture;
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
 import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 import org.vmstudio.visor.api.server.VRServerSettings;
 
@@ -289,19 +290,32 @@ public class VRInvScreen extends VRInvEffectInvScreen implements AbstractContain
     }
 
     private void openCreativeInventory() {
-        this.minecraft.setScreen(new CreativeModeInventoryScreen(
+        McVersionClientUtils.setScreen(new CreativeModeInventoryScreen(
                 this.minecraft.player,
                 this.minecraft.player.connection.enabledFeatures(),
                 this.minecraft.options.operatorItemsTab().get()
         ));
     }
 
+    // [-- Modified: no renderBackground inside the overlay,
+    // no narrow-screen mode - the book always fits below,
+    // recipe book calls guarded by availability
+    //? if >=26.1 {
     @Override
+    public void extractRenderState(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+        // the slot tooltip is part of super since 26.1
+        super.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+        if (recipeBookAvailable) {
+            EssentialsGuiUtils.nextStratum(guiGraphics);
+            this.recipeBookComponent.extractRenderState(guiGraphics, mouseX, mouseY, partialTick);
+            this.recipeBookComponent.extractTooltip(guiGraphics, mouseX, mouseY, this.hoveredSlot);
+        }
+        this.xMouse = (float)mouseX;
+        this.yMouse = (float)mouseY;
+    }
+    //?} elif >=1.21.2 {
+    /*@Override
     public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
-        // [-- Modified: no renderBackground inside the overlay,
-        // no narrow-screen mode - the book always fits below,
-        // recipe book calls guarded by availability
-        //? if >=1.21.2 {
         super.render(guiGraphics, mouseX, mouseY, partialTick);
         if (recipeBookAvailable) {
             EssentialsGuiUtils.nextStratum(guiGraphics);
@@ -311,8 +325,13 @@ public class VRInvScreen extends VRInvEffectInvScreen implements AbstractContain
         if (recipeBookAvailable) {
             this.recipeBookComponent.renderTooltip(guiGraphics, mouseX, mouseY, this.hoveredSlot);
         }
-        //?} else {
-        /*if (recipeBookAvailable) {
+        this.xMouse = (float)mouseX;
+        this.yMouse = (float)mouseY;
+    }
+    *///?} else {
+    /*@Override
+    public void render(GuiGraphics guiGraphics, int mouseX, int mouseY, float partialTick) {
+        if (recipeBookAvailable) {
             this.recipeBookComponent.render(guiGraphics, mouseX, mouseY, partialTick);
         }
         super.render(guiGraphics, mouseX, mouseY, partialTick);
@@ -323,23 +342,30 @@ public class VRInvScreen extends VRInvEffectInvScreen implements AbstractContain
         if (recipeBookAvailable) {
             this.recipeBookComponent.renderTooltip(guiGraphics, this.leftPos, this.topPos, mouseX, mouseY);
         }
-        *///?}
-        // --]
-
         this.xMouse = (float)mouseX;
         this.yMouse = (float)mouseY;
     }
+    *///?}
+    // --]
 
     // the ghost recipe is part of the slot pass since 1.21.2, drawn at the VR slots by GhostSlotsMixin
-    //? if >=1.21.11 {
+    //? if >=26.1 {
     @Override
+    protected void extractSlots(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY) {
+        super.extractSlots(guiGraphics, mouseX, mouseY);
+        if (recipeBookAvailable) {
+            this.recipeBookComponent.extractGhostRecipe(guiGraphics, false);
+        }
+    }
+    //?} elif >=1.21.11 {
+    /*@Override
     protected void renderSlots(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         super.renderSlots(guiGraphics, mouseX, mouseY);
         if (recipeBookAvailable) {
             this.recipeBookComponent.renderGhostRecipe(guiGraphics, false);
         }
     }
-    //?} elif >=1.21.2 {
+    *///?} elif >=1.21.2 {
     /*@Override
     protected void renderSlots(GuiGraphics guiGraphics) {
         super.renderSlots(guiGraphics);
@@ -350,8 +376,13 @@ public class VRInvScreen extends VRInvEffectInvScreen implements AbstractContain
     *///?}
 
 
+    //? if >=26.1 {
     @Override
+    public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+    //?} else {
+    /*@Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
+    *///?}
         int i = this.leftPos;
         int j = this.topPos;
 
@@ -429,12 +460,21 @@ public class VRInvScreen extends VRInvEffectInvScreen implements AbstractContain
         return mouseX < (double)guiLeft || mouseY < (double)guiTop || mouseX >= (double)(guiLeft + this.imageWidth) || mouseY >= (double)(guiTop + this.imageHeight);
     }
 
-    protected void slotClicked(Slot slot, int slotId, int mouseButton, ClickType type) {
+    //? if >=26.1 {
+    protected void slotClicked(Slot slot, int slotId, int mouseButton, ContainerInput type) {
         super.slotClicked(slot, slotId, mouseButton, type);
         if (recipeBookAvailable) {
             this.recipeBookComponent.slotClicked(slot);
         }
     }
+    //?} else {
+    /*protected void slotClicked(Slot slot, int slotId, int mouseButton, ClickType type) {
+        super.slotClicked(slot, slotId, mouseButton, type);
+        if (recipeBookAvailable) {
+            this.recipeBookComponent.slotClicked(slot);
+        }
+    }
+    *///?}
 
     @Override
     public void recipesUpdated() {

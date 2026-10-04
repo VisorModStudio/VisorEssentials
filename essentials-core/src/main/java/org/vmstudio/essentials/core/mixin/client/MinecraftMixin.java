@@ -1,18 +1,14 @@
 package org.vmstudio.essentials.core.mixin.client;
 
-import org.vmstudio.essentials.core.client.EssentialsClientSettings;
-import org.vmstudio.essentials.core.common.VisorEssentials;
+import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
+import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 import org.vmstudio.visor.api.VisorAPI;
 import org.vmstudio.essentials.core.client.gui.overlays.VROverlayContainer;
-import org.vmstudio.essentials.core.client.extensions.AbstractContainerScreenExtension;
 import org.vmstudio.essentials.core.client.tasks.BowItemTask;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Options;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
-import net.minecraft.client.gui.screens.inventory.CreativeModeInventoryScreen;
-import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.player.LocalPlayer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.world.entity.Entity;
@@ -27,7 +23,6 @@ import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.Shadow;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.Redirect;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 @Mixin(Minecraft.class)
@@ -41,57 +36,17 @@ public class MinecraftMixin {
     public HitResult hitResult;
 
     @Shadow
-    public Screen screen;
-
-    @Shadow
     public LocalPlayer player;
 
-    /**
-     * Replaces vanilla container screen with overlay
-     *
-     * @param screen s
-     * @param info   s
-     */
+    //? if <26.2 {
+    /*// replaces vanilla container screen with overlay, the hook is in GuiMixin since 26.2
     @Inject(method = "setScreen", at = @At("HEAD"), cancellable = true)
     public void visorEssentials$UseVRContainerScreen(Screen screen, CallbackInfo info) {
-        if(!EssentialsClientSettings.getBetterInventory().isEnabled()) return;
-        if(VisorAPI.clientState().stateMode().isNotActive()) return;
-        // we need containers attached to entity or block,
-        // otherwise display it vanilla way
-        if(hitResult == null
-                || hitResult.getType() == HitResult.Type.MISS){
-            return;
-        }
-
-        // if already have screen opened, don't use container overlay,
-        // This approach helps with server GUIs support and just more stable
-        if (this.screen != null) {
-            return;
-        }
-
-        if (!(screen instanceof InventoryScreen)
-                && !(screen instanceof CreativeModeInventoryScreen)
-                && (screen instanceof AbstractContainerScreen<?> containerScreen)) {
-            boolean supportsVR = ((AbstractContainerScreenExtension)containerScreen)
-                    .visorEssentials$supportsVRContainer();
-            if(!supportsVR){
-                return;
-            }
+        if (VROverlayContainer.openInstead(screen)) {
             info.cancel();
-
-
-            var overlayContainer = VisorAPI.client().getGuiManager()
-                    .getOverlayManager()
-                    .getOverlay(
-                            "container",
-                            VROverlayContainer.class
-                    );
-
-            overlayContainer.openMenu(
-                    containerScreen
-            );
         }
     }
+    *///?}
 
 
     /**
@@ -176,13 +131,13 @@ public class MinecraftMixin {
     }
 
 
-    @Redirect(method = "handleKeybinds",
+    @WrapOperation(method = "handleKeybinds",
             at = @At(value = "INVOKE",
                     target = "Lnet/minecraft/client/KeyMapping;isDown()Z",
                     ordinal = 2))
-    private boolean visorEssentials$keepBowUse(KeyMapping instance) {
+    private boolean visorEssentials$keepBowUse(KeyMapping instance, Operation<Boolean> original) {
         if (VisorAPI.clientState().stateMode().isNotActive()) {
-            return instance.isDown();
+            return original.call(instance);
         }
         BowItemTask bow = BowItemTask.getInstance();
         if (bow != null
@@ -190,7 +145,7 @@ public class MinecraftMixin {
                 && bow.isNotched()) {
             return true;
         }
-        return instance.isDown();
+        return original.call(instance);
     }
 
 }

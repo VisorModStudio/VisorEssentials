@@ -15,6 +15,7 @@ import org.vmstudio.visor.api.client.render.decoration.hand.VRHandItemPose;
 import org.vmstudio.visor.api.common.HandType;
 import org.vmstudio.visor.api.common.addon.VisorAddon;
 import org.vmstudio.visor.api.common.addon.component.ComponentPriority;
+import org.vmstudio.visor.api.compatibility.mcversion.render.McRenderUtils;
 
 @RegisterVRItemPose
 public class BowItemPose extends VRHandItemPose {
@@ -52,7 +53,7 @@ public class BowItemPose extends VRHandItemPose {
         rotation.mul(Axis.XP.rotationDegrees(yaw));
 
         stack.translate(translateX, translateY, translateZ);
-        stack.mulPose(rotation);
+        McRenderUtils.rotate(stack, rotation);
         stack.scale(scale, scale, scale);
     }
 

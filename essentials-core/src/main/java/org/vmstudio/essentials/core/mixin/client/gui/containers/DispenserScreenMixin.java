@@ -46,7 +46,11 @@ public abstract class DispenserScreenMixin
         visorEssentials$setEdgeHeight(imageHeight);
     }
 
-    @ModifyExpressionValue(method = "renderBg", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/DispenserScreen;CONTAINER_LOCATION:Lnet/minecraft/resources/Identifier;", ordinal = 0))
+    //? if >=26.1 {
+    @ModifyExpressionValue(method = "extractBackground", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/DispenserScreen;CONTAINER_LOCATION:Lnet/minecraft/resources/Identifier;", ordinal = 0))
+    //?} else {
+    /*@ModifyExpressionValue(method = "renderBg", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/DispenserScreen;CONTAINER_LOCATION:Lnet/minecraft/resources/Identifier;", ordinal = 0))
+    *///?}
     private Identifier visorEssentials$background(Identifier original){
         return visorEssentials$isVRContainer() ? visorEssentials$VrTexture : original;
     }

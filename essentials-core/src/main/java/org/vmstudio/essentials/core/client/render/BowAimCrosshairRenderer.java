@@ -1,8 +1,9 @@
 package org.vmstudio.essentials.core.client.render;
 
+import com.mojang.renderpearl.api.pipeline.PrimitiveTopology;
 import com.mojang.blaze3d.vertex.DefaultVertexFormat;
 import com.mojang.blaze3d.vertex.PoseStack;
-import com.mojang.blaze3d.vertex.VertexFormat;
+import com.mojang.renderpearl.api.vertex.VertexFormat;
 import com.mojang.math.Axis;
 import net.minecraft.core.BlockPos;
 import net.minecraft.resources.Identifier;
@@ -181,13 +182,13 @@ public class BowAimCrosshairRenderer implements VREventListener {
         );
 
         // --- Render ---
-        poseStack.mulPose(Axis.YP.rotationDegrees(-yaw));
-        poseStack.mulPose(Axis.XP.rotationDegrees(pitch));
+        McRenderUtils.rotate(poseStack, Axis.YP.rotationDegrees(-yaw));
+        McRenderUtils.rotate(poseStack, Axis.XP.rotationDegrees(pitch));
         poseStack.scale(scale, scale, scale);
         Matrix4f mat = poseStack.last().pose();
 
         McVertexBuilder buf = McVertexBuilder.get();
-        buf.begin(VertexFormat.Mode.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
+        buf.begin(PrimitiveTopology.QUADS, DefaultVertexFormat.POSITION_TEX_COLOR);
         buf.vertex(mat, -1f, 1f, 0f)
                 .uv(UV_SIZE, 0f)
                 .color(brightness, brightness, brightness, 1f)

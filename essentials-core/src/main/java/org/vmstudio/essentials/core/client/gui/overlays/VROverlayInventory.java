@@ -1,5 +1,6 @@
 package org.vmstudio.essentials.core.client.gui.overlays;
 
+import com.mojang.blaze3d.platform.InputConstants;
 import org.vmstudio.essentials.core.client.EssentialsClientSettings;
 import org.vmstudio.essentials.core.client.tasks.BowItemTask;
 import org.vmstudio.essentials.core.common.VisorEssentials;
@@ -17,6 +18,7 @@ import org.vmstudio.visor.api.common.addon.VisorAddon;
 import org.vmstudio.visor.api.common.eventbus.listener.VREventHandler;
 import org.vmstudio.visor.api.common.eventbus.listener.VREventListener;
 import org.vmstudio.visor.api.common.player.VRPose;
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
 import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 import org.vmstudio.essentials.core.client.gui.VRDoubleClick;
 import org.vmstudio.essentials.core.client.gui.screens.VRInvScreen;
@@ -191,7 +193,7 @@ public class VROverlayInventory extends VROverlayScreenInScreen<VRInvScreen> imp
                 .isTracking()) {
             return false;
         }
-        if(minecraft.screen != null){
+        if(McVersionClientUtils.screen() != null){
             return false;
         }
         if (minecraft.isPaused()
@@ -274,7 +276,7 @@ public class VROverlayInventory extends VROverlayScreenInScreen<VRInvScreen> imp
     @Override
     protected boolean onMouseClicked(double mouseX, double mouseY, int buttonType) {
         if (screen == null
-                || buttonType == 0 && (isCursorOnResizeHandle(getRawMouseX(), getRawMouseY())
+                || buttonType == InputConstants.MOUSE_BUTTON_LEFT && (isCursorOnResizeHandle(getRawMouseX(), getRawMouseY())
                 || isCursorOnDragHandle(getRawMouseX(), getRawMouseY()))) {
             return super.onMouseClicked(mouseX, mouseY, buttonType);
         }

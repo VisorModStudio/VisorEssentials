@@ -15,8 +15,7 @@ dependencies {
 
 loom {
     forge {
-        convertAccessWideners = true
-        extraAccessWideners.add loom.accessWidenerPath.get().asFile.name
+        convertAccessWideners(modJar, loom.accessWidenerPath.get().asFile.name)
 
         mixinConfig "${mod_id}.mixins.json"
     }

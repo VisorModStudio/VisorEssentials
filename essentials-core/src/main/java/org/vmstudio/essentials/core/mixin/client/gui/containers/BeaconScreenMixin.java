@@ -51,7 +51,11 @@ public abstract class BeaconScreenMixin
         visorEssentials$setEdgeHeight(imageHeight);
     }
 
-    @ModifyExpressionValue(method = "renderBg", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/BeaconScreen;BEACON_LOCATION:Lnet/minecraft/resources/Identifier;"))
+    //? if >=26.1 {
+    @ModifyExpressionValue(method = "extractBackground", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/BeaconScreen;BEACON_LOCATION:Lnet/minecraft/resources/Identifier;"))
+    //?} else {
+    /*@ModifyExpressionValue(method = "renderBg", at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/BeaconScreen;BEACON_LOCATION:Lnet/minecraft/resources/Identifier;"))
+    *///?}
     private Identifier visorEssentials$background(Identifier original){
         return visorEssentials$isVRContainer() ? visorEssentials$VrTexture : original;
     }

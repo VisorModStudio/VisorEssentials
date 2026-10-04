@@ -1,7 +1,7 @@
 package org.vmstudio.essentials.core.client.gui.screens;
 
 import net.minecraft.ChatFormatting;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.Screen;
@@ -11,6 +11,8 @@ import org.vmstudio.essentials.core.client.EssentialsClientSettings;
 import org.vmstudio.essentials.core.common.EssentialsFeature;
 import org.vmstudio.essentials.core.common.VisorEssentials;
 import org.vmstudio.essentials.core.server.EssentialsServerSettings;
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
+import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
 
 
 public class EssentialsSettingsScreen extends Screen {
@@ -71,17 +73,22 @@ public class EssentialsSettingsScreen extends Screen {
 
     @Override
     public void onClose() {
-        this.minecraft.setScreen(parent);
+        McVersionClientUtils.setScreen(parent);
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        //? if <1.20.2 {
-        /*//
-        renderBackground(graphics);
-        *///?}
+    //? if >=26.1 {
+    public void extractRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
+        super.extractRenderState(graphics, mouseX, mouseY, partialTick);
+    //?} elif >=1.20.2 {
+    /*public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.render(graphics, mouseX, mouseY, partialTick);
+    *///?} else {
+    /*public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+        renderBackground(graphics);
+        super.render(graphics, mouseX, mouseY, partialTick);
+    *///?}
         // 1.21.6+ skips text without an alpha byte
-        graphics.drawCenteredString(this.font, this.title, this.width / 2, 12, 0xFFFFFFFF);
+        McGuiUtils.drawCenteredString(graphics, this.font, this.title, this.width / 2, 12, 0xFFFFFFFF);
     }
 }

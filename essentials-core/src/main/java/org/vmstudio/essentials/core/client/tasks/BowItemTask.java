@@ -18,6 +18,7 @@ import org.vmstudio.essentials.core.common.network.EssentialsChannel;
 import org.vmstudio.essentials.core.common.network.toserver.BowDrawCancelPayloadToServer;
 import org.vmstudio.essentials.core.common.network.toserver.BowTensionPayloadToServer;
 import org.vmstudio.visor.api.VisorAPI;
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
 import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 import org.vmstudio.visor.api.client.ClientFeature;
 import org.vmstudio.visor.api.client.events.AllowClientFeatureVREvent;
@@ -261,7 +262,7 @@ public class BowItemTask extends VisorTask implements VREventListener {
         if(!EssentialsClientSettings.isBetterBowActive()){
             return false;
         }
-        if(MC.screen != null){
+        if(McVersionClientUtils.screen() != null){
             return false;
         }
         if (!isEnabled() || player == null || MC.gameMode == null) return false;

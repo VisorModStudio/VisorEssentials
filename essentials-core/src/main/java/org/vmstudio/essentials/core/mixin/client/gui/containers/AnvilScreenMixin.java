@@ -4,7 +4,7 @@ import org.vmstudio.essentials.core.client.extensions.AbstractContainerScreenExt
 import org.vmstudio.essentials.core.common.VisorEssentials;
 import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 import org.vmstudio.visor.api.compatibility.mcversion.gui.McGuiUtils;
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.inventory.AnvilScreen;
 import net.minecraft.client.gui.screens.inventory.ItemCombinerScreen;
 import net.minecraft.network.chat.Component;
@@ -47,7 +47,13 @@ public abstract class AnvilScreenMixin
         visorEssentials$setEdgeHeight(imageHeight);
     }
 
-    @Redirect(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/ItemCombinerScreen;renderBg(Lnet/minecraft/client/gui/GuiGraphics;FII)V"))
+    //? if >=26.1 {
+    @Override
+    public Identifier visorEssentials$getVRBackgroundTexture() {
+        return visorEssentials$VrTexture;
+    }
+    //?} else {
+    /*@Redirect(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/ItemCombinerScreen;renderBg(Lnet/minecraft/client/gui/GuiGraphics;FII)V"))
     private void visorEssentials$background(ItemCombinerScreen instance, GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY){
         if(visorEssentials$isVRContainer()) {
             McGuiUtils.blit(guiGraphics, visorEssentials$VrTexture, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, 256, 256);
@@ -57,10 +63,11 @@ public abstract class AnvilScreenMixin
         super.renderBg(guiGraphics, partialTick, mouseX, mouseY);
 
     }
+    *///?}
 
     //? if <1.20.2 {
-    /*@Redirect(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/Identifier;IIIIII)V"))
-    private void visorEssentials$background2(GuiGraphics instance, Identifier atlasLocation, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight){
+    /*@Redirect(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/GuiGraphics;blit(Lnet/minecraft/resources/ResourceLocation;IIIIII)V"))
+    private void visorEssentials$background2(GuiGraphics instance, ResourceLocation atlasLocation, int x, int y, int uOffset, int vOffset, int uWidth, int vHeight){
         if(visorEssentials$isVRContainer()) {
             int imageHeight = 166; //vanilla image used
             instance.blit(atlasLocation,

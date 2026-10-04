@@ -15,8 +15,7 @@ dependencies {
 
 loom {
     neoForge {
-        convertAccessWideners(tasks.named("remapJar", net.fabricmc.loom.task.RemapJarTask),
-                loom.accessWidenerPath.get().asFile.name)
+        convertAccessWideners(modJar, loom.accessWidenerPath.get().asFile.name)
     }
 }
 

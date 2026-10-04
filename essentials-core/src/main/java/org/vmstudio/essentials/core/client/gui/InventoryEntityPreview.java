@@ -1,6 +1,6 @@
 package org.vmstudio.essentials.core.client.gui;
 
-import net.minecraft.client.gui.GuiGraphics;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.world.entity.LivingEntity;
 //? if >=1.21.2 {
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -22,12 +22,15 @@ public final class InventoryEntityPreview {
         throw new UnsupportedOperationException("This is an utility class and cannot be instantiated");
     }
 
-    public static void renderFollowingMouse(GuiGraphics guiGraphics, int left, int top,
+    public static void renderFollowingMouse(GuiGraphicsExtractor guiGraphics, int left, int top,
                                             float mouseX, float mouseY, LivingEntity entity) {
-        //? if >=1.21.2 {
-        InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics,
+        //? if >=26.1 {
+        InventoryScreen.extractEntityInInventoryFollowsMouse(guiGraphics,
                 left + 26, top + 8, left + 75, top + 78, 30, 0.0625F, mouseX, mouseY, entity);
-        //?} else {
+        //?} elif >=1.21.2 {
+        /*InventoryScreen.renderEntityInInventoryFollowsMouse(guiGraphics,
+                left + 26, top + 8, left + 75, top + 78, 30, 0.0625F, mouseX, mouseY, entity);
+        *///?} else {
         /*renderEntityInInventoryFollowsMouse(guiGraphics, left + 51, top + 75, 30,
                 (float) (left + 51) - mouseX, (float) (top + 75 - 50) - mouseY, entity);
         *///?}

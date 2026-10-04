@@ -47,7 +47,11 @@ public abstract class HorseInventoryScreenMixin<T extends AbstractMountInventory
         imageHeight = 88;
     }
 
-    @Inject(method = "render", at = @At("TAIL"))
+    //? if >=26.1 {
+    @Inject(method = "extractRenderState", at = @At("TAIL"))
+    //?} else {
+    /*@Inject(method = "render", at = @At("TAIL"))
+    *///?}
     private void visorEssentials$updateEdges(CallbackInfo ci){
         visorEssentials$setEdgeX(leftPos);
         visorEssentials$setEdgeY(topPos);
@@ -55,7 +59,11 @@ public abstract class HorseInventoryScreenMixin<T extends AbstractMountInventory
         visorEssentials$setEdgeHeight(imageHeight);
     }
 
-    @ModifyExpressionValue(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractMountInventoryScreen;getBackgroundTextureLocation()Lnet/minecraft/resources/Identifier;"))
+    //? if >=26.1 {
+    @ModifyExpressionValue(method = "extractBackground", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractMountInventoryScreen;getBackgroundTextureLocation()Lnet/minecraft/resources/Identifier;"))
+    //?} else {
+    /*@ModifyExpressionValue(method = "renderBg", at = @At(value = "INVOKE", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractMountInventoryScreen;getBackgroundTextureLocation()Lnet/minecraft/resources/Identifier;"))
+    *///?}
     private Identifier visorEssentials$background(Identifier original){
         return visorEssentials$isVRContainer() ? visorEssentials$VrTexture : original;
     }

@@ -9,6 +9,7 @@ import org.vmstudio.essentials.core.client.gui.VRSlotRenderContext;
 import org.vmstudio.visor.api.VisorAPI;
 import org.vmstudio.visor.api.client.gui.overlays.framework.screen.VROverlayScreenInScreen;
 import org.vmstudio.visor.api.client.gui.overlays.framework.template.VROverlayTemplateScreenInScreen;
+import org.vmstudio.visor.api.compatibility.mcversion.McVersionClientUtils;
 import org.vmstudio.essentials.core.client.gui.ContainerSlot;
 import org.vmstudio.essentials.core.client.extensions.AbstractContainerScreenExtension;
 import net.minecraft.client.gui.screens.Screen;
@@ -28,8 +29,6 @@ import org.spongepowered.asm.mixin.injection.Inject;
 import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import java.util.*;
-
-import static org.vmstudio.essentials.core.client.AddonEntryClient.MC;
 
 
 @Mixin(AbstractContainerScreen.class)
@@ -58,10 +57,22 @@ public abstract class AbstractContainerScreenMixin <T extends AbstractContainerM
         super(title);
     }
 
+    //? if >=26.2 {
     @ModifyExpressionValue(
+            method = "extractCarriedItem",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z", ordinal = 0)
+    )
+    //?} elif >=26.1 {
+    /*@ModifyExpressionValue(
+            method = "extractCarriedItem",
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z", ordinal = 1)
+    )
+    *///?} else {
+    /*@ModifyExpressionValue(
             method = "renderCarriedItem",
             at = @At(value = "INVOKE", target = "Lnet/minecraft/world/item/ItemStack;isEmpty()Z", ordinal = 1)
     )
+    *///?}
     private boolean visorEssentials$noDraggingItem(boolean isEmpty) {
         return isEmpty || visorEssentials$isCarriedByOverlay();
     }
@@ -78,7 +89,7 @@ public abstract class AbstractContainerScreenMixin <T extends AbstractContainerM
                 .getFocusedOverlay();
         if(focused != null
                 && focused.getId().equals("game_screen")){
-            if(MC.screen == this){
+            if(McVersionClientUtils.screen() == this){
                 return false;
             }
         }
@@ -95,7 +106,11 @@ public abstract class AbstractContainerScreenMixin <T extends AbstractContainerM
         return true;
     }
 
-    @Inject(method = "<init>", at  = @At("TAIL"))
+    //? if >=26.1 {
+    @Inject(method = "<init>(Lnet/minecraft/world/inventory/AbstractContainerMenu;Lnet/minecraft/world/entity/player/Inventory;Lnet/minecraft/network/chat/Component;II)V", at  = @At("TAIL"))
+    //?} else {
+    /*@Inject(method = "<init>", at  = @At("TAIL"))
+    *///?}
     public void visorEssentials$onInit(CallbackInfo ci){
         visorEssentials$vrSlots = new ArrayList<>();
         visorEssentials$vrSlotsMap = new LinkedHashMap<>();
@@ -130,8 +145,18 @@ public abstract class AbstractContainerScreenMixin <T extends AbstractContainerM
         }
     }
 
-    // on both paths: render() and AbstractRecipeBookScreen's own render(), which skips it
-    @Inject(method = "renderContents", at = @At("HEAD"))
+    //? if >=26.1 {
+    @Inject(method = "extractContents", at = @At("HEAD"))
+    private void visorEssentials$beginSlotRender(CallbackInfo ci){
+        VRSlotRenderContext.begin(this);
+    }
+
+    @Inject(method = "extractContents", at = @At("RETURN"))
+    private void visorEssentials$endSlotRender(CallbackInfo ci){
+        VRSlotRenderContext.end();
+    }
+    //?} else {
+    /*@Inject(method = "renderContents", at = @At("HEAD"))
     private void visorEssentials$beginSlotRender(CallbackInfo ci){
         VRSlotRenderContext.begin(this);
     }
@@ -140,19 +165,34 @@ public abstract class AbstractContainerScreenMixin <T extends AbstractContainerM
     private void visorEssentials$endSlotRender(CallbackInfo ci){
         VRSlotRenderContext.end();
     }
+    *///?}
 
+    //? if >=26.1 {
     @ModifyExpressionValue(
+            method = "extractLabels",
+            at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractContainerScreen;playerInventoryTitle:Lnet/minecraft/network/chat/Component;")
+    )
+    //?} else {
+    /*@ModifyExpressionValue(
             method = "renderLabels",
             at = @At(value = "FIELD", target = "Lnet/minecraft/client/gui/screens/inventory/AbstractContainerScreen;playerInventoryTitle:Lnet/minecraft/network/chat/Component;")
     )
+    *///?}
     private Component visorEssentials$noInventoryTitle(Component title){
         return visorEssentials$isVrContainer ? Component.empty() : title;
     }
 
+    //? if >=26.1 {
     @ModifyExpressionValue(
+            method = {"extractSlots", "getHoveredSlot(DD)Lnet/minecraft/world/inventory/Slot;", "mouseReleased"},
+            at = @At(value = "INVOKE", target = "Lnet/minecraft/core/NonNullList;iterator()Ljava/util/Iterator;")
+    )
+    //?} else {
+    /*@ModifyExpressionValue(
             method = {"renderSlots", "getHoveredSlot(DD)Lnet/minecraft/world/inventory/Slot;", "mouseReleased"},
             at = @At(value = "INVOKE", target = "Lnet/minecraft/core/NonNullList;iterator()Ljava/util/Iterator;")
     )
+    *///?}
     private Iterator<Slot> visorEssentials$vrSlotsOnly(Iterator<Slot> slots) {
         if(visorEssentials$hasVRSlots()){
             return visorEssentials$vrSlotsMap.keySet().iterator();
@@ -160,20 +200,43 @@ public abstract class AbstractContainerScreenMixin <T extends AbstractContainerM
         return slots;
     }
 
-    // mouseReleased: where a snapped-back item flies to
+    //? if >=26.2 {
     @WrapOperation(
+            method = {"extractSlot", "isHovering(Lnet/minecraft/world/inventory/Slot;DD)Z", "extractSlotHighlightBack", "extractSlotHighlightFront"},
+            at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;x:I")
+    )
+    //?} elif >=26.1 {
+    /*@WrapOperation(
+            method = {"extractSlot", "isHovering(Lnet/minecraft/world/inventory/Slot;DD)Z", "extractSlotHighlightBack", "extractSlotHighlightFront", "mouseReleased"},
+            at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;x:I")
+    )
+    *///?} else {
+    /*@WrapOperation(
             method = {"renderSlot", "isHovering(Lnet/minecraft/world/inventory/Slot;DD)Z", "renderSlotHighlightBack", "renderSlotHighlightFront", "mouseReleased"},
             at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;x:I")
     )
+    *///?}
     private int visorEssentials$vrSlotX(Slot slot, Operation<Integer> original){
         var vrSlot = visorEssentials$vrSlot(slot);
         return vrSlot != null ? vrSlot.vrPosX() : original.call(slot);
     }
 
+    //? if >=26.2 {
     @WrapOperation(
+            method = {"extractSlot", "isHovering(Lnet/minecraft/world/inventory/Slot;DD)Z", "extractSlotHighlightBack", "extractSlotHighlightFront"},
+            at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;y:I")
+    )
+    //?} elif >=26.1 {
+    /*@WrapOperation(
+            method = {"extractSlot", "isHovering(Lnet/minecraft/world/inventory/Slot;DD)Z", "extractSlotHighlightBack", "extractSlotHighlightFront", "mouseReleased"},
+            at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;y:I")
+    )
+    *///?} else {
+    /*@WrapOperation(
             method = {"renderSlot", "isHovering(Lnet/minecraft/world/inventory/Slot;DD)Z", "renderSlotHighlightBack", "renderSlotHighlightFront", "mouseReleased"},
             at = @At(value = "FIELD", target = "Lnet/minecraft/world/inventory/Slot;y:I")
     )
+    *///?}
     private int visorEssentials$vrSlotY(Slot slot, Operation<Integer> original){
         var vrSlot = visorEssentials$vrSlot(slot);
         return vrSlot != null ? vrSlot.vrPosY() : original.call(slot);
