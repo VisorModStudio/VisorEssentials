@@ -31,14 +31,16 @@ public class EssentialsServer implements VREventListener {
 
     @VREventHandler
     public void onPlayerJoined(VisorPlayerJoinedVREvent event){
-        EssentialsChannel.get().sendToClient(
-                event.getPlayer().getMcPlayer(),
-                new SettingsPayloadToClient(
-                        EssentialsServerConfig
-                                .getSettingsForClient()
-                                .toPlaintext()
-                )
-        );
+        if(EssentialsChannel.canReceive(event.getPlayer().getMcPlayer())){
+            EssentialsChannel.get().sendToClient(
+                    event.getPlayer().getMcPlayer(),
+                    new SettingsPayloadToClient(
+                            EssentialsServerConfig
+                                    .getSettingsForClient()
+                                    .toPlaintext()
+                    )
+            );
+        }
 
         var vrPlayer = event.getPlayer().asVR();
         if(vrPlayer == null) return;

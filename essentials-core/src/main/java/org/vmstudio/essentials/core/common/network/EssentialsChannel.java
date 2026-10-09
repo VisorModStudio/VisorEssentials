@@ -2,6 +2,7 @@ package org.vmstudio.essentials.core.common.network;
 
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.resources.Identifier;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.item.BowItem;
 import org.jetbrains.annotations.NotNull;
 import org.vmstudio.essentials.core.common.VisorEssentials;
@@ -16,6 +17,8 @@ import org.vmstudio.visor.api.common.network.VisorNetwork;
 import org.vmstudio.visor.api.common.network.VisorPayloadToServer;
 import org.vmstudio.visor.api.compatibility.mcversion.McVersionUtils;
 
+import java.util.function.Predicate;
+
 public final class EssentialsChannel {
 
     public static final Identifier ID =
@@ -23,6 +26,9 @@ public final class EssentialsChannel {
     public static final int NETWORK_VERSION = 2; // 2: bow draw cancel payload
 
     private static VisorChannel INSTANCE;
+
+    // NeoForge refuses payloads on a channel the client never registered (no Essentials there)
+    private static Predicate<ServerPlayer> receiveCheck = player -> true;
 
     private EssentialsChannel() {}
 
@@ -32,6 +38,14 @@ public final class EssentialsChannel {
                     "EssentialsChannel not built — call init(owner) at mod-init time");
         }
         return INSTANCE;
+    }
+
+    public static void setReceiveCheck(@NotNull Predicate<ServerPlayer> check) {
+        receiveCheck = check;
+    }
+
+    public static boolean canReceive(@NotNull ServerPlayer player) {
+        return receiveCheck.test(player);
     }
 
     public static void createChannel(@NotNull VisorAddon owner) {
