@@ -24,6 +24,7 @@ import org.vmstudio.essentials.core.client.gui.VRDoubleClick;
 import org.vmstudio.essentials.core.client.gui.screens.VRInvScreen;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.joml.Vector3f;
 
 import java.util.List;
@@ -88,15 +89,7 @@ public class VROverlayInventory extends VROverlayScreenInScreen<VRInvScreen> imp
     @Override
     protected void onPreTick() {
         if(isCanBeVisible()) {
-            VROverlayHelper.applyPose(
-                    this,
-                    optionsPose.getPositionAnchor(),
-                    optionsPose.getRotationAnchor(),
-                    optionsPose.getScale(),
-                    optionsPose.isAimedRotation(),
-                    optionsPose.getPositionOffset(),
-                    optionsPose.getRotationOffset()
-            );
+            updatePose(1);
         }
     }
 
@@ -188,8 +181,10 @@ public class VROverlayInventory extends VROverlayScreenInScreen<VRInvScreen> imp
         if (!EssentialsClientSettings.getBetterInventory().isEnabled()) {
             return false;
         }
-        if (!VisorAPI.client().getVRLocalPlayer()
-                .getRawController(HandType.OFFHAND)
+        var usedHand = getUsedHand();
+        if (usedHand != null
+                && !VisorAPI.client().getVRLocalPlayer()
+                .getRawController(usedHand)
                 .isTracking()) {
             return false;
         }
@@ -211,6 +206,9 @@ public class VROverlayInventory extends VROverlayScreenInScreen<VRInvScreen> imp
     @Override
     protected void onVisibilityChanged() {
         var usedHand = getUsedHand();
+        if(usedHand == null){
+            return;
+        }
         VisorAPI.client().getGuiManager().getCursorHandler()
                 .clearFocus(usedHand);
     }
@@ -283,7 +281,7 @@ public class VROverlayInventory extends VROverlayScreenInScreen<VRInvScreen> imp
         return clicks.mouseClicked(screen, mouseX, mouseY, buttonType);
     }
 
-    public HandType getUsedHand(){
+    public @Nullable HandType getUsedHand(){
         return switch(optionsPose.getPositionAnchor()){
             case MAIN_HAND -> HandType.MAIN;
             case OFFHAND -> HandType.OFFHAND;
