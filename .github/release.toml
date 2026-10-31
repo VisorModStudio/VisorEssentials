@@ -1,10 +1,11 @@
-# Settings of .github/workflows/release.yml and publish.yml, read by .github/scripts/release.py.
+# Settings of .github/workflows (build.yml, ci.yml, release.yml, publish.yml), read by .github/scripts/release.py.
 # Repository variables: MODRINTH_ID (project R4fBkFEC), CURSEFORGE_ID (project 1317168).
 # Secrets: MODRINTH_TOKEN, CURSEFORGE_TOKEN.
 
 [build]
 java = "21"
-task = "buildAll"
+task = ":build-{mc}"
+args = "--configure-on-demand --parallel -Dorg.gradle.internal.repository.max.tentatives=8 -Dorg.gradle.internal.repository.initial.backoff=1000"
 jars = "build/libs"
 exclude = ["*-dev*.jar", "*-sources.jar", "*-javadoc.jar"]
 
@@ -21,7 +22,7 @@ game_version_filter = "releases"
 modrinth_classifiers = []
 modrinth_slug = ""
 
-# Version table of the project
+# Version table of the project, read at the release tag. Its [targets] are the build jobs of release.yml.
 [publish.versions]
 file = "stonecutter.properties.toml"
 java = "java_version"
